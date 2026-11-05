@@ -23,13 +23,13 @@ import Control.Monad (when)
 import Control.Exception (try, IOException)
 
 banner :: String
-banner = "fortl v0.3.0 - Programming for science"
+banner = "cosi v0.4.0 - Code with Scientific Intent"
 
 helpMessage :: String
 helpMessage = unlines
-  [ "Usage: fortl <filename>"
-  , "       fortl <filename> --extract-py [output.py]"
-  , "       fortl --help"
+  [ "Usage: cosi <filename>"
+  , "       cosi <filename> --extract-py [output.py]"
+  , "       cosi --help"
   ]
 
 main :: IO ()
