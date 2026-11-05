@@ -30,6 +30,7 @@ library
       Lang.Helpers
       Lang.Kinding
       Lang.Lexer
+      Lang.Main
       Lang.Options
       Lang.Primitives
       Lang.REPL
@@ -52,12 +53,13 @@ library
   default-language: Haskell2010
 
 executable cosi
-  main-is: Lang/Frontend.hs
+  main-is: Lang/Main.hs
   other-modules:
       Lang.Descriptions
       Lang.Desugar
       Lang.ExtractPy
       Lang.FirstParameter
+      Lang.Frontend
       Lang.Helpers
       Lang.Kinding
       Lang.Lexer
@@ -75,7 +77,7 @@ executable cosi
       Paths_cosi_implementation
   hs-source-dirs:
       src
-  ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults -main-is Lang.Frontend
+  ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults -main-is Lang.Main
   build-tools:
       alex
     , happy
@@ -83,49 +85,9 @@ executable cosi
       array
     , base >=4.10 && <5
     , containers
+    , cosi-implementation
     , directory
     , filepath
-    , cosi-implementation
-    , haskeline
-    , text
-    , transformers
-  default-language: Haskell2010
-
-executable cosii
-  main-is: Lang/REPL.hs
-  other-modules:
-      Lang.Descriptions
-      Lang.Desugar
-      Lang.ExtractPy
-      Lang.FirstParameter
-      Lang.Frontend
-      Lang.Helpers
-      Lang.Kinding
-      Lang.Lexer
-      Lang.Options
-      Lang.Parser
-      Lang.PrettyPrint
-      Lang.Primitives
-      Lang.Semantics
-      Lang.Substitution
-      Lang.Syntax
-      Lang.TypeError
-      Lang.TypeHelpers
-      Lang.Types
-      Paths_cosi_implementation
-  hs-source-dirs:
-      src
-  ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults -main-is Lang.REPL
-  build-tools:
-      alex
-    , happy
-  build-depends:
-      array
-    , base >=4.10 && <5
-    , containers
-    , directory
-    , filepath
-    , cosi-implementation
     , haskeline
     , text
     , transformers
@@ -144,9 +106,9 @@ test-suite cosi-golden
     , array
     , base >=4.10 && <5
     , containers
+    , cosi-implementation
     , directory
     , filepath
-    , cosi-implementation
     , haskeline
     , process
     , strict

@@ -13,10 +13,9 @@ import Lang.Syntax
 import Lang.Types
 import Lang.TypeError
 
-import System.Directory (getCurrentDirectory)
-import System.Environment (getArgs)
+import System.Directory (getCurrentDirectory, doesFileExist)
 import System.Exit
-import System.FilePath    ((</>), replaceExtension)
+import System.FilePath    ((</>), (<.>), takeExtension, replaceExtension)
 import GHC.IO.Exception   (IOErrorType(..), ioe_type)
 
 import Control.Monad (when)
@@ -25,39 +24,22 @@ import Control.Exception (try, IOException)
 banner :: String
 banner = "cosi v0.4.0 - Code with Scientific Intent"
 
-helpMessage :: String
-helpMessage = unlines
-  [ "Usage: cosi <filename>"
-  , "       cosi <filename> --extract-py [output.py]"
-  , "       cosi --help"
-  ]
+-- | Resolve a source file name, allowing the @.cosi@ extension to be omitted:
+-- if @fname@ does not exist but @fname.cosi@ does, use the latter.
+resolveSourceFile :: FilePath -> IO FilePath
+resolveSourceFile fname = do
+  exists <- doesFileExist fname
+  if exists || takeExtension fname == sourceExtension
+    then return fname
+    else do
+      let withExt = fname <.> sourceExtension
+      existsWithExt <- doesFileExist withExt
+      return $ if existsWithExt then withExt else fname
 
-main :: IO ()
-main = do
-  putStrLn banner
-  args <- getArgs
-  -- Get command line args
-  case args of
-    [] -> putStrLn "Please supply a filename as a command line argument"
-    ("--help":_) -> putStr helpMessage
-    -- `--extract-py` may appear anywhere among the arguments, e.g.
-    -- `fortl --extract-py file.frtl` or `fortl file.frtl --extract-py`
-    _ | "--extract-py" `elem` args ->
-          case filter (/= "--extract-py") args of
-            []           -> do
-              putStrLn "Please supply a filename to extract"
-              exitFailure
-            (fname:rest) -> extractPy fname rest
-    -- If we have at least one
-    (fname:_) -> do
-      result <- run True fname
-      case result of
-        Left _   -> exitFailure
-        Right (_, _, _, result, _)  -> do
-          putStrLn $ pprint result
-          exitSuccess
+sourceExtension :: String
+sourceExtension = ".cosi"
 
--- | Parse, desugar and typecheck a fortl file, and if it is well-typed,
+-- | Parse, desugar and typecheck a cosi file, and if it is well-typed,
 -- write out an equivalent Python program.
 extractPy :: String -> [String] -> IO ()
 extractPy fname rest = do
@@ -78,7 +60,8 @@ tryReadFile path = try $ do
   return contents
 
 run :: Bool -> String -> IO (Either String (Program 'Parsed, [Option], Env, Value, Context))
-run report fname = do
+run report fname0 = do
+  fname <- resolveSourceFile fname0
   currentDir <- getCurrentDirectory
   let path = currentDir </> fname
   result <- tryReadFile path
