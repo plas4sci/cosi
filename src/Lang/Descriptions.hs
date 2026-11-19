@@ -14,6 +14,7 @@ import Data.Map.Lazy
 import Lang.TypeError
 import Data.List (sort, intersect)
 import Lang.Primitives
+import Lang.Homomorphisms
 import Data.Ratio (numerator, denominator)
 
 unitDescription :: Type 0
@@ -75,9 +76,9 @@ coherenceChecks repr = do
 
     -- Check that the unit is SI compliant with the dimension
     checkCoherence unitRepr ((dimName, exponent):dimRepr) =
-      case Map.lookup (rewriteSI dimName) unitRepr of
-        Just exponent' | exponent == exponent' ->
-          checkCoherence (delete (rewriteSI dimName) unitRepr) dimRepr
+      case rewriteSI dimName of
+        Just siName | Map.lookup siName unitRepr == Just exponent ->
+          checkCoherence (delete siName unitRepr) dimRepr
 
         _ -> False
 
@@ -109,11 +110,14 @@ instance Representation DescriptionsRepr where
     -- | Compute the representation of a description type
     computeRepresentation :: Type 0 -> Either TypeError DescriptionsRepr
     -- Apply desc homomorphisms
-    computeRepresentation (TyApp (TyCon ZeroP "SI") [t]) = do
+    computeRepresentation siTy@(TyApp (TyCon ZeroP "SI") [t]) = do
       d <- computeRepresentation t
       case Map.lookup "Dimension" d of
         Just (FreeAGroup repr) -> do
-          let siUnit = FreeAGroup (mapKeys rewriteSI repr)
+          -- SI is only defined on the SI base dimensions
+          siUnit <- case mapM (\(dimName, n) -> (\u -> (u, n)) <$> rewriteSI dimName) (assocs repr) of
+                      Just us -> Right $ FreeAGroup (Map.fromList us)
+                      Nothing -> Left $ CannotComputeDescriptionRepresentation siTy
           case Map.lookup "Unit" d of
             -- An existing unit is only coherent with the dimension if it is
             -- exactly SI(d), in which case replacing it with SI(d) is a no-op

@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -28,6 +28,7 @@ library
       Lang.Desugar
       Lang.FirstParameter
       Lang.Helpers
+      Lang.Homomorphisms
       Lang.Kinding
       Lang.Lexer
       Lang.Options
@@ -59,6 +60,7 @@ executable fortl
       Lang.ExtractPy
       Lang.FirstParameter
       Lang.Helpers
+      Lang.Homomorphisms
       Lang.Kinding
       Lang.Lexer
       Lang.Options
@@ -100,6 +102,7 @@ executable fortli
       Lang.FirstParameter
       Lang.Frontend
       Lang.Helpers
+      Lang.Homomorphisms
       Lang.Kinding
       Lang.Lexer
       Lang.Options
