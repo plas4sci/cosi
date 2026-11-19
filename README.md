@@ -1,11 +1,11 @@
-# cosi - COde with Scientific Intent
+# cosi - A programming language for COde with Scientific Intent
 
 <table style="border-width:0;"><tr><td valign="top" width="160">
   <img src="cosi-logo.png" alt="cosi logo" width="140"/>
   <span style="font-size:7pt">Logo by Penelope Orchard, edited with GPT-6 Luna, <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a></span>
 </td><td valign="top">
 
-**cosi** is a programming language for scientific and numerical computing that enables more lightweight, 
+**cosi** is a (research prototype) programming language for scientific and numerical computing that enables more lightweight, 
 description of the intended domain compared to traditional general-purpose programming languages.
  
 **System principles/values**. Code should enable:
