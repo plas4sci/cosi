@@ -125,7 +125,7 @@ grGolden formatResult file = show file `trace` goldenTest
 
 -- | Sanity-check the Python extraction against the example programs: for
 -- each file in "examples", extract it to Python, run the result with
--- python3, and check the printed value against fortl's own interpreted
+-- python3, and check the printed value against cosi's own interpreted
 -- result for the same program. Skipped entirely if python3 isn't on PATH.
 --
 -- This is deliberately scoped to "examples" (not the full "tests/cases"
@@ -134,7 +134,7 @@ grGolden formatResult file = show file `trace` goldenTest
 -- doesn't attempt to support.
 pythonExtractionTests :: IO TestTree
 pythonExtractionTests = do
-  files      <- findByExtension fortlFileExtensions "examples"
+  files      <- findByExtension cosiFileExtensions "examples"
   hasPython3 <- findExecutable "python3"
   return $ testGroup "Python extraction (examples)" $
     case hasPython3 of
@@ -145,7 +145,7 @@ pythonExtractionTest :: FilePath -> TestTree
 pythonExtractionTest file = testCase file $ do
   result <- Lang.run False file
   case result of
-    Left err -> assertFailure $ "fortl failed to typecheck " <> file <> ": " <> err
+    Left err -> assertFailure $ "cosi failed to typecheck " <> file <> ": " <> err
     Right (parsetree, _, _, normalForm, _) -> do
       let expected  = pprint normalForm
           pySource  = extractProgram (Just file) parsetree
@@ -161,13 +161,13 @@ pythonExtractionTest file = testCase file $ do
         ExitSuccess ->
           assertBool
             (unlines
-              [ "fortl and python disagree on the result of " <> file
-              , "  fortl:  " <> expected
+              [ "cosi and python disagree on the result of " <> file
+              , "  cosi:  " <> expected
               , "  python: " <> trim out
               ])
             (valuesMatch expected out)
 
--- | Compare a fortl-printed value against Python's printed output for
+-- | Compare a cosi-printed value against Python's printed output for
 -- (hopefully) the same value. Exact string equality first; failing that,
 -- pull out all the numbers each side printed and compare them
 -- pointwise with a relative tolerance, since Haskell's `Float` and
