@@ -17,8 +17,8 @@ description of the intended domain compared to traditional general-purpose progr
 
 How does this work out technically?
 
-- **Statically-typed**: say what you mean, enforce what you need
-- **Graded numerical types**: types are indexed and carry structure, allowing for domain-specific properties to be expressed (and enforced) in the type system;
+- **Statically-typed**: types are a way to express meaning, but also enforce constraints;
+- **Graded numerical types**: types are indexed and carry _structure_ which is used to express domain-specific properties in the type system;
 - **Python-like syntax**: To lower barrier to entry, cosi's syntax is based on [PurePy](https://pure-py.github.io/), a pure (side-effect free) subset of Python.  
 
 </td></tr></table>
@@ -31,18 +31,19 @@ From [examples/quantity.cosi](examples/quantity.cosi):
 """
 Simple example showing units and quantities
 """
-x : Float[Unit[m] & Quantity[length]] = 2.0
-y : Float[Unit[m] & Quantity[length]] = 1.0
-t : Float[Unit[s] & Quantity[time]] = 4.0
+x : Float[Unit[m] & Quantity[length] & Basis[Obj1]] = 2.0
+y : Float[Unit[m] & Quantity[length] & Basis[Obj1]] = 1.0
+t : Float[Unit[s] & Quantity[time] & Basis[Obj1]] = 4.0
 # End result
-it : Float[Unit[m / s] & Quantity[length / time]] = (x + y) / t
+it : Float[Unit[m / s] & Quantity[length / time] & Basis[Obj1]] = (x + y) / t
 ```
 Running `cosi examples/quantity.cosi` (or just `cosi examples/quantity`; the `.cosi` extension is optional) produces:
 ```
-Well-typed as Float[{(UoM & KoQ)}][(Unit[(m * s^-1.0)] & Quantity[(length * time^-1.0)])]
+Well-typed as Float[{(UoM & KoQ & BasisTy)}][(Unit[(m * s^-1.0)] & Quantity[(length * time^-1.0) & & Basis[Obj1]])]
 0.75
 ```
-The type checker verifies the units and quantities are consistent, and evaluates the result `(2.0 + 1.0) / 4.0 = 0.75` with inferred type `Float[Unit[m/s] & Quantity[length/time]]`.
+The type checker verifies the units and quantities are consistent, and evaluates the result `(2.0 + 1.0) / 4.0 = 0.75` with inferred type equivalent
+to `Float[Unit[m/s] & Quantity[length/time] & Basis[Obj1]]`.
 
 ### REPL
 
