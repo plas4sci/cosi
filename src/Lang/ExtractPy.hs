@@ -1,13 +1,13 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 
--- | Extracts a fortl program into an equivalent Python program.
+-- | Extracts a cosi program into an equivalent Python program.
 --
 -- This works by pretty printing the AST in much the same shape as
 -- Lang.PrettyPrint" but erasing everything that has no run-time meaning
 -- once translated to Python: type signatures, casts, lifts, and type
 -- abstraction/application. These are all erasable accroding to the Lang.Semantics
--- so dropping them and keeping the underlying term preserves fortl's behaviour.
+-- so dropping them and keeping the underlying term preserves cosi's behaviour.
 module Lang.ExtractPy (extractProgram) where
 
 import Lang.Syntax
@@ -15,19 +15,19 @@ import Lang.PrettyPrint (pprint, isLexicallyAtomic)
 
 import Data.List (intercalate, isInfixOf)
 
--- | Render a whole (parsed) fortl program as Python source.
+-- | Render a whole (parsed) cosi program as Python source.
 --
 -- The result always ends by printing `it`, seeded to `None` up front so a
 -- program that never binds it still prints something -- this mirrors
 -- "Lang.Semantics".`interpretDefs`'s own fallback (@lookup "it" env@,
--- defaulting to @None@), so the printed value matches what @fortl@ itself
+-- defaulting to @None@), so the printed value matches what @cosi@ itself
 -- prints for the same program.
 extractProgram :: Maybe String -> Program 'Parsed -> String
 extractProgram original defs =
   let body   = concatMap (extractDef TopLevel) defs
       whence = case original of
-                 Nothing -> "a fortl program"
-                 Just filename -> "fortl program " ++ filename
+                 Nothing -> "a cosi program"
+                 Just filename -> "cosi program " ++ filename
       header = ("# Generated from " ++ whence ++ " by --extract-py")
              : if any ("math.sqrt(" `isInfixOf`) body then ["import math", ""] else [""]
       preamble = ["it = None"]
@@ -72,7 +72,7 @@ bracketPy :: Expr -> String
 bracketPy e | isLexicallyAtomic e = pyExpr e
             | otherwise    = "(" ++ pyExpr e ++ ")"
 
--- | Pretty print a fortl expression as Python.
+-- | Pretty print a cosi expression as Python.
 pyExpr :: Expr -> String
 pyExpr (Abs params e)         = "lambda " ++ intercalate ", " (map fst params) ++ ": " ++ pyExpr e
 pyExpr (App (Var "sqrt") [e]) = "math.sqrt(" ++ pyExpr e ++ ")"

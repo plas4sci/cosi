@@ -1,15 +1,15 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
-name:           fortl-implementation
-version:        0.3.0
-synopsis:       A modern language for science
+name:           cosi-implementation
+version:        0.4.0
+synopsis:       COde with Scientific Intent - A modern language for science
 author:         Dominic Orchard
 maintainer:     Dominic Orchard
-copyright:      2024 authors
+copyright:      2024-26 Dominic Orchard
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -30,13 +30,14 @@ library
       Lang.Helpers
       Lang.Kinding
       Lang.Lexer
+      Lang.Main
       Lang.Options
       Lang.Primitives
       Lang.REPL
       Lang.Substitution
       Lang.TypeError
       Lang.Types
-      Paths_fortl_implementation
+      Paths_cosi_implementation
   hs-source-dirs:
       src
   ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults
@@ -51,48 +52,8 @@ library
     , transformers
   default-language: Haskell2010
 
-executable fortl
-  main-is: Lang/Frontend.hs
-  other-modules:
-      Lang.Descriptions
-      Lang.Desugar
-      Lang.ExtractPy
-      Lang.FirstParameter
-      Lang.Helpers
-      Lang.Kinding
-      Lang.Lexer
-      Lang.Options
-      Lang.Parser
-      Lang.PrettyPrint
-      Lang.Primitives
-      Lang.REPL
-      Lang.Semantics
-      Lang.Substitution
-      Lang.Syntax
-      Lang.TypeError
-      Lang.TypeHelpers
-      Lang.Types
-      Paths_fortl_implementation
-  hs-source-dirs:
-      src
-  ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults -main-is Lang.Frontend
-  build-tools:
-      alex
-    , happy
-  build-depends:
-      array
-    , base >=4.10 && <5
-    , containers
-    , directory
-    , filepath
-    , fortl-implementation
-    , haskeline
-    , text
-    , transformers
-  default-language: Haskell2010
-
-executable fortli
-  main-is: Lang/REPL.hs
+executable cosi
+  main-is: Lang/Main.hs
   other-modules:
       Lang.Descriptions
       Lang.Desugar
@@ -106,16 +67,17 @@ executable fortli
       Lang.Parser
       Lang.PrettyPrint
       Lang.Primitives
+      Lang.REPL
       Lang.Semantics
       Lang.Substitution
       Lang.Syntax
       Lang.TypeError
       Lang.TypeHelpers
       Lang.Types
-      Paths_fortl_implementation
+      Paths_cosi_implementation
   hs-source-dirs:
       src
-  ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults -main-is Lang.REPL
+  ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults -main-is Lang.Main
   build-tools:
       alex
     , happy
@@ -123,19 +85,19 @@ executable fortli
       array
     , base >=4.10 && <5
     , containers
+    , cosi-implementation
     , directory
     , filepath
-    , fortl-implementation
     , haskeline
     , text
     , transformers
   default-language: Haskell2010
 
-test-suite fortl-golden
+test-suite cosi-golden
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_fortl_implementation
+      Paths_cosi_implementation
   hs-source-dirs:
       tests
   ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults
@@ -144,9 +106,9 @@ test-suite fortl-golden
     , array
     , base >=4.10 && <5
     , containers
+    , cosi-implementation
     , directory
     , filepath
-    , fortl-implementation
     , haskeline
     , process
     , strict
