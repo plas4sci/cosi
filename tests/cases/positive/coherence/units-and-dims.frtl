@@ -1,0 +1,6 @@
+x : Float[Unit[m] & Dimension[L]] = 5.0
+y : Float[Unit[km] & Dimension[L]] = 5.0
+z : Float[Dimension[1] & Scalar[0.5]] = 0.5
+w : Float[Unit[1] & Scalar[0.5]] = 0.5
+v : Float[Dimension[1] & Unit[1] & Scalar[0.25]] = 0.25
+it = (x,y,z,w,v)
