@@ -75,8 +75,25 @@ dataConstructors = [
   , ("False"    , boolTy (tyCon0 "1"))
  ]
 
+-- | The descriptor kinds, each paired with the type constructor that forms
+-- its descriptors from a field of the given kind, e.g. Unit[m] : UoM from
+-- m : UoMBase. The constructor also names the kind's component in the
+-- representation of a description.
+descriptorKinds :: [(Identifier, (Identifier, Type 1))]
+descriptorKinds =
+  [ ("UoM",         ("Unit",      unitBase))
+  , ("KoQ",         ("Quantity",  type0))
+  , ("SpeciesType", ("Species",   type0))
+  , ("BasisType",   ("Basis",     type0)) -- TODO: type0 should be the open type Bases here
+  , ("Dim",         ("Dimension", dimensionBase))
+  , ("AffineSpace", ("Affine",    ratKind)) -- Affine[weight]
+  ]
+
 typeConstructors :: [(Identifier, Type 1)]
-typeConstructors = [
+typeConstructors =
+  -- the constructors of each descriptor kind from its field
+  [ (con, FunTy [field] (tyCon1 kind)) | (kind, (con, field)) <- descriptorKinds ]
+  ++ [
      -- Graded float
     ("Float"    , ImplicitFunTy "d" desc2 (FunTy [tyVar "d"] type0))
      -- Graded integer
@@ -86,16 +103,11 @@ typeConstructors = [
     -- Graded boolean
   , ("Bool"     , ImplicitFunTy "d" desc2 (FunTy [tyVar "d"] type0))
   , ("Nat"      , type0)
-  , ("Unit"     , FunTy [unitBase] (tyCon1 "UoM"))
-  , ("Quantity" , FunTy [type0] (tyCon1 "KoQ"))
-  , ("Species"  , FunTy [type0] (tyCon1 "SpeciesType"))
-  , ("Basis"    , FunTy [type0] (tyCon1 "BasisType")) -- TODO: type0 should be the open type Bases here
-  , ("Dimension", FunTy [dimensionBase] (tyCon1 "Dim"))
   -------
+    -- the other constructors of affine-space descriptors
   , ("Point",     tyCon1 "AffineSpace")
   , ("Vector",    tyCon1 "AffineSpace")
   , ("NPoint",    tyCon1 "AffineSpace")
-  , ("Affine",    FunTy [ratKind] (tyCon1 "AffineSpace")) -- Affine[weight]
   , ("Scalar",    FunTy [ratKind] (tyCon1 "AffineSpace")) -- Scalar[value]
   , ("None"     , type0)
     -- The standard 7 SI base dimensions
@@ -109,6 +121,7 @@ typeConstructors = [
     -- The standard 7 SI units of measure
   , ("s"        , unitBase) -- seconds
   , ("m"        , unitBase) -- metres
+      , ("km"        , unitBase) -- kilometres [for demonstration]
   , ("kg"       , unitBase) -- kilograms
   , ("K"        , unitBase) -- Kelvin
   , ("mol"      , unitBase) -- moles

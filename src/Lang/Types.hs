@@ -746,6 +746,8 @@ errorToString (BaseTypeMismatch expected actual) =
 
 errorToString (DimensionAndUnitIncoherence dimension unit) =
   "Incoherence between grade " <> pprint dimension <> " and " <> pprint unit
+errorToString (DescriptionIncoherence component other) =
+  "Incoherence between grade " <> pprint component <> " and " <> pprint other
 
 errorToString (AffineSpaceProductUndefined t1 t2) =
   "The product of " <> pprint (normalise t1) <> " and " <> pprint (normalise t2)

@@ -16,6 +16,7 @@ import Data.List (sort, intersect)
 import Lang.Primitives
 import Lang.Homomorphisms
 import Data.Ratio (numerator, denominator)
+import Control.Monad (foldM)
 
 unitDescription :: Type 0
 unitDescription = tyCon0 "1"
@@ -53,34 +54,72 @@ normalisationByEvaluation t = do
         repr' <- coherenceChecks repr
         return (reifyToTypeTerm repr')
 
+-- | Check that a description is coherent with respect to the designated
+-- coherence maps (see 'homomorphisms'): for every coherence map on
+-- descriptors `f : A -> B` if a description `d = d_a & d_b & ...`
+-- with `d_a : A` and `d_b : B` then it must be that `f(d_a) = d_b`
+-- (if it is defined)
+
+-- The coherence maps are applied iteratively until no new component is
+-- determined, so that the components determined by composites of coherence
+-- maps are checked too, as are two components that determine the same one
+-- (e.g. a Unit and a Quantity which each determine a Dimension).
+
+-- The description itself is returned unchanged (if checks pass)
 coherenceChecks :: DescriptionsRepr -> Either TypeError DescriptionsRepr
-coherenceChecks repr = do
-  case Map.lookup "Unit" repr of
-    Just (FreeAGroup unitRepr) ->
-      case Map.lookup "Dimension" repr of
-        Just (FreeAGroup dimRepr) ->
-          if checkCoherence unitRepr (assocs dimRepr)
-            then Right repr
-            else Left (DimensionAndUnitIncoherence
-                    (reifyToTypeTerm $ singleton "Dimension" $ FreeAGroup dimRepr)
-                    (reifyToTypeTerm $ singleton "Unit" $ FreeAGroup unitRepr))
-        _ -> Right repr
-    _ -> Right repr
-
+coherenceChecks repr = saturate (Map.mapWithKey (\k v -> (v, componentTerm k v)) repr) >> Right repr
   where
-    -- TODO: generalise to the idea that all injective grading algebra morphisms
-    -- must have this coherence
+    -- the coherence maps, keyed by the components they relate
+    coherenceMaps =
+      [ ((srcKey, tgtKey), f)
+      | ((src, tgt), (f, True)) <- homomorphisms
+      , Just srcKey <- [descriptorTyCon src]
+      , Just tgtKey <- [descriptorTyCon tgt] ]
 
-    -- We need the there to be no left over units that don't match a dimension
-    checkCoherence unitRepr [] = Map.null unitRepr
+    -- | The type constructor of a descriptor
+    descriptorTyCon :: Identifier -> Maybe Identifier
+    descriptorTyCon kind = fst <$> lookup kind descriptorKinds
 
-    -- Check that the unit is SI compliant with the dimension
-    checkCoherence unitRepr ((dimName, exponent):dimRepr) =
-      case rewriteSI dimName of
-        Just siName | Map.lookup siName unitRepr == Just exponent ->
-          checkCoherence (delete siName unitRepr) dimRepr
+    -- Each known component is paired with the component of the description
+    -- that determined it (itself, for the components the description has),
+    -- which is reported if there is an incoherence
+    saturate known = do
+      known' <- foldM step known coherenceMaps
+      if keys known' == keys known then Right known' else saturate known'
 
-        _ -> False
+    step known ((srcKey, tgtKey), f) =
+      case Map.lookup srcKey known of
+        Nothing -> Right known
+        Just (v, origin) ->
+          case f (reifyToTypeTerm v) of
+            -- outside the domain of the map, so there is no constraint
+            Nothing -> Right known
+            Just image -> do
+              w <- componentRepr tgtKey image
+              case Map.lookup tgtKey known of
+                Nothing -> Right (insert tgtKey (w, origin) known)
+                Just (w', origin')
+                  | isRight (reprEquality w (IsSpec w')) -> Right known
+                  | otherwise -> Left (DescriptionIncoherence origin' origin)
+
+    isRight = either (const False) (const True)
+
+-- | The type term of a single component of a description, e.g. Unit[m]
+componentTerm :: Identifier -> DescriptionRepr -> Type 0
+componentTerm k v = reifyToTypeTerm (singleton k v :: DescriptionsRepr)
+
+-- | The component with the given key whose field is the given type term,
+-- e.g. the "Dimension" component with field L * T^-1
+componentRepr :: Identifier -> Type 0 -> Either TypeError DescriptionRepr
+componentRepr k field = do
+    d <- computeRepresentation term :: Either TypeError DescriptionsRepr
+    case Map.lookup k d of
+      Just v  -> Right v
+      Nothing -> Left (CannotComputeDescriptionRepresentation term)
+  where
+    -- the affine-space field is already a complete descriptor (e.g. Point),
+    -- whereas the others are the argument of their descriptor constructor
+    term = if k == "Affine" then field else TyApp (tyCon0 k) [field]
 
 -- | Internal representation of groups of descriptions
 type DescriptionsRepr = Map Identifier DescriptionRepr

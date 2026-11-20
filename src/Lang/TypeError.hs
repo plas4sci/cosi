@@ -36,6 +36,9 @@ data TypeError
   | MismatchedDescriptionReprTypes
   | BaseTypeMismatch Identifier Identifier
   | DimensionAndUnitIncoherence { dimension :: Type 0, unit :: Type 0}
+  -- | Two components of a description that a coherence map relates but which
+  -- do not agree: the first, and the one which determines it otherwise
+  | DescriptionIncoherence (Type 0) (Type 0)
   | AffineSpaceScalingUnsupported BinOp (Type 0) String
   | AffineSpaceProductUndefined (Type 0) (Type 0)
   | AffineSpacePowerUndefined (Type 0)
