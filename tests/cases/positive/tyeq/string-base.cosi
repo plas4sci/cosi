@@ -1,0 +1,3 @@
+x : str = "hello cosi"
+y : String[{Base}][1] = x
+it = y

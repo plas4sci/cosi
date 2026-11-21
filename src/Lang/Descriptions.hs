@@ -78,7 +78,7 @@ coherenceChecks repr = saturate (Map.mapWithKey (\k v -> (v, componentTerm k v))
 
     -- | The type constructor of a descriptor
     descriptorTyCon :: Identifier -> Maybe Identifier
-    descriptorTyCon kind = fst <$> lookup kind descriptorKinds
+    descriptorTyCon kind = fst <$> Prelude.lookup kind descriptorKinds
 
     -- Each known component is paired with the component of the description
     -- that determined it (itself, for the components the description has),
