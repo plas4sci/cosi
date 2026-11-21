@@ -1,9 +1,9 @@
 """
-(Vector - Point) is a DVector (grade -1); combining two DVectors via `+`
-is undefined for the same reason Point + Point is (the grade would leave
-{DVector, Vector, Point}).
+(Vector - Point) is a NVector (grade -1); combining two NVectors via `+`
+is not an NVector for the same reason Point + Point is (the grade would leave
+{NVector, Vector, Point}).
 """
 x : Float[Unit[s] & Point] = 10.0
 y : Float[Unit[s] & Vector] = 5.0
 dv = y - x
-it = dv + dv
+it : Float[Unit[s] & NVector] = dv + dv
