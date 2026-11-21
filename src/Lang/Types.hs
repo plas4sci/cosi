@@ -562,7 +562,15 @@ synth_ gamma (BinOp op e1 e2) | op `elem` [BinOpPlus, BinOpMinus, BinOpTimes, Bi
         -- integer division combines descriptions as division does
         BinOpDivideInteger -> normalisationByEvaluation (ProdTy a1 (reciprocalType a2))
         BinOpPlus   -> normalisationByEvaluation (SumTy a1 a2)
-        BinOpMinus  -> normalisationByEvaluation (SumTy a1 (NegTy a2))
+        -- subtraction is addition of the negated second operand, so a
+        -- mismatch arising from that sum is reported against `-` and the
+        -- second operand as written (not its negation)
+        BinOpMinus  -> first asMinus $ normalisationByEvaluation (SumTy a1 (NegTy a2))
+          where
+            asMinus (BinaryOperatorDescriptionMismatch BinOpPlus t1 _) =
+              BinaryOperatorDescriptionMismatch BinOpMinus t1
+                (either (const a2) id (normalisationByEvaluation a2))
+            asMinus err = err
         _           -> Left $ ContextualError $ "Unexpected operator " <> pprint op
   -- the kind of the result is that of its description
   (g', desc) <- synthKind g
