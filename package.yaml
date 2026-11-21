@@ -1,8 +1,8 @@
-name: fortl-implementation
-version: '0.3.0'
-synopsis: A modern language for science
+name: cosi-implementation
+version: '0.4.0'
+synopsis: COde with Scientific Intent - A modern language for science
 author: Dominic Orchard
-copyright: 2024 authors
+copyright: 2024-26 Dominic Orchard
 license: BSD3
 dependencies:
 - base >=4.10 && <5
@@ -27,25 +27,15 @@ ghc-options:
 - -Wno-type-defaults
 
 executables:
-  fortl:
-    main: Lang/Frontend.hs
+  cosi:
+    main: Lang/Main.hs
     source-dirs: src
-    ghc-options: -main-is Lang.Frontend
+    ghc-options: -main-is Lang.Main
     build-tools:
      - alex
      - happy
     dependencies:
-     - fortl-implementation
-
-  fortli:
-    main: Lang/REPL.hs
-    source-dirs: src
-    ghc-options: -main-is Lang.REPL
-    build-tools:
-     - alex
-     - happy
-    dependencies:
-     - fortl-implementation
+     - cosi-implementation
 
 library:
   source-dirs: src
@@ -60,11 +50,11 @@ library:
   - Lang.TypeHelpers
 
 tests:
-  fortl-golden:
+  cosi-golden:
     main: Spec.hs
     source-dirs: tests
     dependencies:
-    - fortl-implementation
+    - cosi-implementation
     - strict
     - Diff
     - process
