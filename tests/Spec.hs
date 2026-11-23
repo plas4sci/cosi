@@ -120,7 +120,7 @@ grGolden formatResult file = show file `trace` goldenTest
 
     runInterp :: FilePath -> IO (Either InterpreterError InterpreterResult)
     runInterp fp = do
-      res <- Lang.run False fp
+      res <- Lang.runQuiet fp
       case res of
         Left err -> return $ Left err
         Right m -> return $ Right (Lang.moduleValue m)
@@ -145,7 +145,7 @@ pythonExtractionTests = do
 
 pythonExtractionTest :: FilePath -> TestTree
 pythonExtractionTest file = testCase file $ do
-  result <- Lang.run False file
+  result <- Lang.runQuiet file
   case result of
     Left err -> assertFailure $ "cosi failed to typecheck " <> file <> ": " <> err
     Right m -> do

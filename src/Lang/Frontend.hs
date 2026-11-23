@@ -77,10 +77,22 @@ tryReadFile path = try $ do
   !contents <- readFile path
   return contents
 
+type RunResult = Either String LoadedModule
+
 -- | Load (parse, check and evaluate) a cosi file and everything it imports,
--- reporting the outcome.
-run :: Bool -> String -> IO (Either String LoadedModule)
-run report fname0 = do
+-- printing a (coloured) summary of the outcome to stdout. If @report@ is set,
+-- also announce which file is being checked.
+run :: Bool -> String -> IO RunResult
+run = runWith putStrLn
+
+-- | As 'run', but print nothing: errors are only returned. Used by the test
+-- suite, where the golden-file comparison reports the outcome instead.
+runQuiet :: String -> IO RunResult
+runQuiet = runWith (\_ -> return ()) False
+
+-- | 'run' parameterised by how to emit its messages.
+runWith :: (String -> IO ()) -> Bool -> String -> IO RunResult
+runWith say report fname0 = do
   fname <- resolveSourceFile fname0
   currentDir <- getCurrentDirectory
   let path = currentDir </> fname
@@ -91,22 +103,22 @@ run report fname0 = do
             | takeExtension fname /= sourceExtension
                 = " (also tried `" <> (fname <.> sourceExtension) <> "`)"
             | otherwise = ""
-      putStrLn $ "File `" <> fname <> "` (Full path:" <> path <> ") cannot be found" <> alsoTried <> "."
+      say $ "File `" <> fname <> "` (Full path:" <> path <> ") cannot be found" <> alsoTried <> "."
       return $ Left "File not found"
     else do
-      when report $ putStrLn $ "Checking " <> fname <> " (Full path:" <> path <> ") ..."
+      when report $ say $ "Checking " <> fname <> " (Full path:" <> path <> ") ..."
       result <- runExceptT (evalStateT (loadModule [] fname) Map.empty)
       case result of
         Left (LoadError kind msg) -> do
           let failure header = ansi_bold <> ansi_red <> header <> "\n" <> msg <> ansi_reset
-          putStrLn $ case kind of
+          say $ case kind of
             LoadParseError    -> ansi_red ++ "Error: " ++ ansi_reset ++ msg
             LoadNotWellFormed -> failure "Not well-formed."
             LoadNotWellTyped  -> failure "Not well-typed."
             LoadImportError   -> failure "Import error."
           return $ Left msg
         Right m -> do
-          putStrLn $ ansi_bold <> ansi_green
+          say $ ansi_bold <> ansi_green
             <> "Well-typed " <> ansi_reset
             <> ansi_bold <> "as " <> ansi_reset <> pprint (moduleType m)
           return $ Right m
