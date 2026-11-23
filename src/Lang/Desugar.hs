@@ -34,7 +34,9 @@ freshVar = do
     st <- get
     let i = next_var st
     put $ st { next_var = i + 1 }
-    return $ "_" ++ show i
+    -- `%` cannot appear in a user identifier, so fresh names never clash
+    -- with (or get captured by) names in the source program
+    return $ "%" ++ show i
 
 -- Convert from a parsed program to a desugared one
 desugar :: Program 'Parsed -> Either TypeError (Program 'Desugared)
@@ -122,11 +124,11 @@ applyAnnotation annotations lhs@(VarLhs id Nothing) =
 applyAnnotation annotations lhs = (lhs, annotations)
 
 -- (a, (b1, b2)) = c
--- _0 = c
--- a = fst _0
--- _1 = snd _0
--- b1 = fst _1
--- b2 = snd _2 
+-- %0 = c
+-- a = fst %0
+-- %1 = snd %0
+-- b1 = fst %1
+-- b2 = snd %1
 
 desugarVal :: Lhs p -> Expr -> Desugar ()
 desugarVal (VarLhs x ty) e = emitDefs [ValDef (VarLhs x ty) e]
