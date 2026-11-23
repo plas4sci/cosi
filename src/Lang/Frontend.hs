@@ -59,21 +59,35 @@ tryReadFile path = try $ do
   !contents <- readFile path
   return contents
 
-run :: Bool -> String -> IO (Either String (Program 'Parsed, [Option], Env, Value, Context))
-run report fname0 = do
+type RunResult = Either String (Program 'Parsed, [Option], Env, Value, Context)
+
+-- | Parse, desugar, typecheck and evaluate a file, printing a (coloured)
+-- summary of the outcome to stdout. If @report@ is set, also announce which
+-- file is being checked.
+run :: Bool -> String -> IO RunResult
+run = runWith putStrLn
+
+-- | As 'run', but print nothing: errors are only returned. Used by the test
+-- suite, where the golden-file comparison reports the outcome instead.
+runQuiet :: String -> IO RunResult
+runQuiet = runWith (\_ -> return ()) False
+
+-- | 'run' parameterised by how to emit its messages.
+runWith :: (String -> IO ()) -> Bool -> String -> IO RunResult
+runWith say report fname0 = do
   fname <- resolveSourceFile fname0
   currentDir <- getCurrentDirectory
   let path = currentDir </> fname
   result <- tryReadFile path
   case result of
     Right contents -> do
-      when report $ putStrLn $ "Checking " <> fname <> " (Full path:" <> path <> ") ..."
+      when report $ say $ "Checking " <> fname <> " (Full path:" <> path <> ") ..."
       case parseProgram fname contents of
         Right (parsetree, options) -> do
           case desugar parsetree of
             Left err -> do
               let ?srcFile = fname
-              putStrLn $ ansi_bold <> ansi_red
+              say $ ansi_bold <> ansi_red
                       <> "Not well-formed.\n" <> errorToString err <> ansi_reset
               return $ Left (errorToString err)
             Right ast -> do
@@ -81,20 +95,20 @@ run report fname0 = do
               case typeCheck options ast of
                 Left err -> do
                   let ?srcFile = fname
-                  putStrLn $ ansi_bold <> ansi_red
+                  say $ ansi_bold <> ansi_red
                     <> "Not well-typed.\n" <> errorToString err <> ansi_reset
                   return $ Left (errorToString err)
                 Right (ctxt, ty) -> do
                   -- Evaluate
                   let (env, normalForm) = interpret options ast
 
-                  putStrLn $ ansi_bold <> ansi_green
+                  say $ ansi_bold <> ansi_green
                     <> "Well-typed " <> ansi_reset
                     <> ansi_bold <> "as " <> ansi_reset <> pprint ty
 
                   return $ Right (parsetree, options, env, normalForm, ctxt)
         Left msg -> do
-          putStrLn $ ansi_red ++ "Error: " ++ ansi_reset ++ msg
+          say $ ansi_red ++ "Error: " ++ ansi_reset ++ msg
           return $ Left msg
     Left e -> do
       case ioe_type e of
@@ -103,11 +117,11 @@ run report fname0 = do
                 | takeExtension fname /= sourceExtension
                     = " (also tried `" <> (fname <.> sourceExtension) <> "`)"
                 | otherwise = ""
-          putStrLn $ "File `" <> fname <> "` (Full path:" <> path <> ") cannot be found" <> alsoTried <> "."
+          say $ "File `" <> fname <> "` (Full path:" <> path <> ") cannot be found" <> alsoTried <> "."
           return $ Left "File not found"
         _ -> do
           let msg = show e
-          putStrLn msg
+          say msg
           return $ Left msg
 
 typeCheck :: [Option] -> Program 'Desugared -> Either TypeError (Context, Type 0)
