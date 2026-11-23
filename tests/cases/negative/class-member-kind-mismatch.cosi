@@ -1,0 +1,3 @@
+class _(UnitBase):
+    km : DimensionBase
+it = 1.0

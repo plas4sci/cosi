@@ -1,0 +1,4 @@
+# DimensionBase is closed: its constructors are fixed
+class _(DimensionBase):
+    Q : DimensionBase
+it = 1.0
