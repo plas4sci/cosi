@@ -19,12 +19,11 @@ displacement : Float[Unit[s] & Vector] = x - y
 
 c : Float[Unit[1] & Scalar[0.5]] = 0.5
 d : Float[Unit[1] & Scalar[0.15]] = 0.15
-
 cd : Float[Unit[1] & Scalar[0.65]] = c + d
 
-cq : Float[Unit[s] & Scalar[0.5]] = 0.5
+# cq : Float[Unit[s] & Scalar[0.5]] = 0.5
 
-bad0 = cq + x
+# bad0 = cq + x
 
 and_then : Float[Unit[s] & Affine[0.5]] = x * c
 
