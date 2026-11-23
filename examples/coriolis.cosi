@@ -1,4 +1,4 @@
-import more_units
+from more_units import *
 
 minute_length : Float[Unit[s/min]] = 60.0
 hour_length   : Float[Unit[s/hour]] = (60.0 : Float[Unit[min/hour]]) * minute_length
