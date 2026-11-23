@@ -2,5 +2,7 @@
 # existing constructor at the same kind is harmless
 class More(UnitBase):
     km : UnitBase
+    mm : UnitBase
 
-it = 1.0 : Float[Unit[km]]
+y : Float [Unit[mm]] = 2.0 # millimetesers
+it : Float[Unit[km]] = 1.0
