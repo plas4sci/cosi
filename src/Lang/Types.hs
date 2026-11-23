@@ -15,9 +15,31 @@ import Lang.Descriptions
 import Lang.TypeHelpers
 import Lang.TypeError
 import Data.List (intercalate)
+import qualified Data.Map as Map
 
 import Data.Maybe (isJust)
 import Data.Either (isRight)
+
+-- | Collect the type constructors declared by the (top-level) class
+-- declarations, to augment open types. 
+-- This function returns the newly defined type constructors before
+-- type checking
+
+-- The class names are ignored (could be `_`)
+-- TODO: think about whether want something else with class names later
+buildTypes :: TypeConstructors -> Program p -> Either TypeError TypeConstructors
+buildTypes inScope defs = do
+  classes  <- sequence [ classConstructors kind members | ClassDef _ kind members <- defs ]
+  return $ foldr Map.union inScope classes
+  where
+    classConstructors kind members
+      -- Check that we this is even an 'open' type.
+      | kind `notElem` openKinds = Left $ ClosedKindExtension kind
+      | otherwise                = Map.fromList <$> mapM (member kind) members
+    -- Check that we are building constructors that actually match the head class
+    member kind (c, k)
+      | k /= kind = Left $ ClassMemberKindMismatch c kind k
+      | otherwise = Right (c, k)
 
 -- Infer the type of an entire program, given the typing context of anything
 -- it imports
