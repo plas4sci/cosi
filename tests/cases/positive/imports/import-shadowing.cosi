@@ -1,0 +1,5 @@
+# A definition shadows an imported name of the same name
+from _import_lib import *
+
+speed_of_light : Float[Unit[m/s]] = 1.0
+it = speed_of_light

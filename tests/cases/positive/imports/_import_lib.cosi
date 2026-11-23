@@ -1,0 +1,9 @@
+# Helper module imported by the import tests (not a test itself)
+speed_of_light : Float[Unit[m/s]] = 299792458.0
+
+_hidden : Float[Unit[1]] = 7.0
+
+def double(x : Float[Unit[m]]) -> Float[Unit[m]]:
+    return x + x
+
+it = 42.0

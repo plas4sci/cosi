@@ -1,0 +1,6 @@
+# The same names imported via two routes are compatible
+from _import_lib import *
+from _import_reexport import *
+
+len : Float[Unit[m]] = 1.0
+it = (quadruple(len), speed_of_light)

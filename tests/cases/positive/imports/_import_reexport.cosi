@@ -1,0 +1,5 @@
+# Helper module: re-exports everything from _import_lib, and adds to it
+from _import_lib import *
+
+def quadruple(x : Float[Unit[m]]) -> Float[Unit[m]]:
+    return double(double(x))

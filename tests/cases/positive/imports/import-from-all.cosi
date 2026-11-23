@@ -1,0 +1,5 @@
+# `from m import *` brings in a module's values and functions
+from _import_lib import *
+
+len : Float[Unit[m]] = 5.0
+it = (speed_of_light, double(len))
