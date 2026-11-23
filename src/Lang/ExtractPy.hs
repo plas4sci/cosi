@@ -51,6 +51,7 @@ extractDef _ (FunDef name _ params _ body) =
 extractDef _ (AnnDef _ _)     = []
 extractDef _ (TypeDef _ _ _)  = []
 extractDef _ (DataDef _ _ _)  = []
+extractDef _ (ClassDef _ _ _) = []
 extractDef _ (ImportDef spec) = [extractImport spec]
 
 -- | Assignment targets, mirroring the source: a plain variable, or a

@@ -14,6 +14,7 @@ import Lang.Primitives
 import Lang.Descriptions
 import Lang.TypeHelpers
 import Lang.TypeError
+import Data.List (intercalate)
 
 import Data.Maybe (isJust)
 import Data.Either (isRight)
@@ -838,6 +839,10 @@ errorToString (WellFormednessError err) =
       "function parameter `" <> parameter <> "` has no type annotation"
     DuplicateParameterAnnotation parameter ->
       "function parameter `" <> parameter <> "` is annotated in both the header and body"
+    NestedClassDeclaration constructors ->
+      "class declaration (of " <> intercalate ", " (map (\c -> "`" <> c <> "`") constructors)
+        <> ") is inside a function; class declarations are static (compile-time) "
+        <> "and must appear at the top level"
 
 errorToString (ContextualError msg) =
   msg

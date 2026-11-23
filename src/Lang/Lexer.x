@@ -164,9 +164,10 @@ tyVarString t = error $ "Not a type variable " ++ show t
 
 scanTokens = alexScanTokens . stripDocstrings >>= (return . trim . layout)
 
--- Add layout markers for function bodies. Existing multiline expressions use
--- indentation for readability, so layout is activated only after a def header.
--- A stack of block columns supports arbitrarily nested defs.
+-- Add layout markers for function and class bodies. Existing multiline
+-- expressions use indentation for readability, so layout is activated only
+-- after a def or class header. A stack of block columns supports arbitrarily
+-- nested blocks.
 layout :: [Token] -> [Token]
 layout tokens = go [] tokens [] 0
   where
@@ -176,7 +177,7 @@ layout tokens = go [] tokens [] 0
       case t of
         TokenNL p ->
           let (next, _) = nextNonNL ts
-              lineHeader = isDefHeader line
+              lineHeader = isBlockHeader line
               nextColumn = maybe 0 (snd . getPos) next
               newline = if (not (null stack) && parenDepth == 0)
                            || lineHeader || lineStartsImport line
@@ -186,7 +187,7 @@ layout tokens = go [] tokens [] 0
               (emitted, stack')
                 -- indentation is ignored inside parentheses
                 | parenDepth /= 0 = (newline, stack)
-                -- block opens after a def header: nl before indent
+                -- block opens after a def/class header: nl before indent
                 | lineHeader && nextColumn > lineColumn line =
                     (newline ++ [TokenIndent p], nextColumn : stack)
                 -- blocks close: one dedent per level, before the nl so the
@@ -203,9 +204,10 @@ layout tokens = go [] tokens [] 0
     lineColumn [] = 0
     lineColumn (t:_) = snd (getPos t)
 
-    isDefHeader line = any isDef line && any isColon line
-    isDef (TokenDef _) = True
-    isDef _ = False
+    isBlockHeader line = any isBlockKeyword line && any isColon line
+    isBlockKeyword (TokenDef _)   = True
+    isBlockKeyword (TokenClass _) = True
+    isBlockKeyword _ = False
     isColon (TokenSig _) = True
     isColon _ = False
 

@@ -119,6 +119,7 @@ interpretDefs env opts ((Return e):defs) =
 interpretDefs env opts (TypeDef{}:defs)   = interpretDefs env opts defs
 interpretDefs env opts (DataDef{}:defs)   = interpretDefs env opts defs
 interpretDefs env opts (ImportDef{}:defs) = interpretDefs env opts defs
+interpretDefs env opts (ClassDef{}:defs)  = interpretDefs env opts defs
 
 interpretDefs env opts [] = (env, ValExpr (Con "None" []))
 

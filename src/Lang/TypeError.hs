@@ -74,6 +74,8 @@ data TypeError
 data WellFormednessError
   = MissingParameterAnnotation Identifier
   | DuplicateParameterAnnotation Identifier
+    -- A class declaration (declaring the given constructors) inside a function
+  | NestedClassDeclaration [Identifier]
   deriving (Show)
 
 class MonadAlt m where

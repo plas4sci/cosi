@@ -58,6 +58,14 @@ desugarDef :: Def 'Parsed -> Desugar ()
 desugarDef (TypeDef id ty1 ty2) = emitDefs [TypeDef id ty1 ty2]
 desugarDef (DataDef id cs ty)   = emitDefs [DataDef id cs ty]
 desugarDef (ImportDef spec)     = emitDefs [ImportDef spec]
+
+-- Class declarations are static, so only allowed at the top level (where the
+-- output stack has a single frame: function bodies push further frames)
+desugarDef (ClassDef name kind constrs) = do
+  st <- get
+  case outputDefs st of
+    [_] -> emitDefs [ClassDef name kind constrs]
+    _   -> lift $ Left $ WellFormednessError $ NestedClassDeclaration (map fst constrs)
 desugarDef (Return e)           = emitDefs [Return e]
 
 desugarDef (AnnDef id ty) =
