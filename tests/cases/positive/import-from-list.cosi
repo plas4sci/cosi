@@ -1,2 +1,0 @@
-from Units import Float, Unit, m, length, s
-it = 1.0

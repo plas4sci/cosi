@@ -1,6 +1,6 @@
 module Lang.Main where
 
-import Lang.Frontend    (banner, run, extractPy)
+import Lang.Frontend    (banner, run, extractPy, LoadedModule(..))
 import Lang.PrettyPrint (pprint)
 import Lang.REPL        (repl)
 
@@ -42,6 +42,6 @@ main = do
       result <- run True fname
       case result of
         Left _   -> exitFailure
-        Right (_, _, _, value, _)  -> do
-          putStrLn $ pprint value
+        Right m  -> do
+          putStrLn $ pprint (moduleValue m)
           exitSuccess

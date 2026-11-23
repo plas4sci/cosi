@@ -83,8 +83,13 @@ lookupBinding name env =
 
 -- Evaluate a program to normal form
 interpret :: [Option] -> Program 'Desugared -> (Env, Value)
-interpret opts program =
-  let (env, v) = interpretDefs emptyEnv opts program
+interpret = interpretWith emptyEnv
+
+-- | Evaluate a program to normal form in an initial environment (e.g. one
+-- holding the values it imports)
+interpretWith :: Env -> [Option] -> Program 'Desugared -> (Env, Value)
+interpretWith env0 opts program =
+  let (env, v) = interpretDefs env0 opts program
   in
     -- prefer the `it` binding if there is one, else the value produced
     -- by the last definition (e.g. an explicit `return`)

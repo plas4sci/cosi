@@ -19,9 +19,10 @@ import Data.List (intercalate)
 import Data.Maybe (isJust)
 import Data.Either (isRight)
 
--- Infer the type of an entire program
-typeCheckProgram :: HasTypeConstructors => Program 'Desugared -> Either TypeError (Context, Type 0)
-typeCheckProgram = typeCheckProgram' [] []
+-- Infer the type of an entire program, given the typing context of anything
+-- it imports
+typeCheckProgram :: HasTypeConstructors => Context -> Program 'Desugared -> Either TypeError (Context, Type 0)
+typeCheckProgram = typeCheckProgram' []
   where
     -- Type check a program
     --   * First argument is a stack of optional return types for function blocks
