@@ -1,0 +1,1 @@
+tests/cases/negative/imports/import-missing-name.cosi: cannot import `nosuch` from `_neg_lib`: no such name

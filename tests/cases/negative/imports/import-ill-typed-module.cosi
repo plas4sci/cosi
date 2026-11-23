@@ -1,0 +1,2 @@
+from _ill_typed import *
+it = x

@@ -1,0 +1,4 @@
+# Only the named unit is imported, so furlong is not in scope
+from _neg_lib import speed
+d : Float[Unit[furlong]] = 1.0
+it = d

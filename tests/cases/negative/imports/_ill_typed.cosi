@@ -1,0 +1,3 @@
+# Helper module with a type error
+x : Float[Unit[m]] = 1.0
+y : Float[Unit[s]] = x

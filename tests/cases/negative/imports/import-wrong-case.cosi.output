@@ -1,0 +1,1 @@
+tests/cases/negative/imports/import-wrong-case.cosi: cannot find module `_Neg_lib` (looked for tests/cases/negative/imports/_Neg_lib.cosi)
