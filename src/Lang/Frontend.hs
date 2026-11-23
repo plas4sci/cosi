@@ -168,6 +168,11 @@ loadModule importers path = do
       contents <- liftIO (tryReadFile path) >>= orFail LoadImportError show
       (parsed, opts) <- orFail LoadParseError id (parseProgram path contents)
 
+      -- Collect the type constructors declared by the module's classes
+      -- TODO: bring them into scope for checking (and export them)
+      openTypeConstructors <- orFail LoadNotWellTyped errorToString $
+        buildTypes primitiveTypeConstructors parsed
+
       -- Imports: later imports shadow earlier ones
       imports <- mapM (loadImport chain path) [ spec | ImportDef spec <- parsed ]
       let importedValues = Map.unions (reverse [ vals | (_, _, vals) <- imports ])
@@ -175,7 +180,7 @@ loadModule importers path = do
       -- Desugar, check and evaluate, with the imported values in scope
       ast <- orFail LoadNotWellFormed errorToString (desugar parsed)
       (ctxt, ty) <- orFail LoadNotWellTyped errorToString $
-        let ?typeConstructors = primitiveTypeConstructors
+        let ?typeConstructors = Map.union primitiveTypeConstructors openTypeConstructors
         in typeCheckProgram [ (x, t) | (x, (t, _)) <- Map.toList importedValues ] ast
       let env0 = Map.foldrWithKey (\x (_, v) -> bindHere x v) emptyEnv importedValues
           (env, value) = interpretWith env0 opts ast
