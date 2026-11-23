@@ -52,6 +52,7 @@ tokens :-
   data                          { \p s -> TokenData p }
   let                           { \p s -> TokenLet p }
   def                           { \p s -> TokenDef p }
+  class                         { \p s -> TokenClass p }
   in                            { \p s -> TokenIn p }
   succ                          { \p s -> TokenSucc p }
   zero                          { \p s -> TokenZero p }
@@ -100,6 +101,7 @@ data Token
   = TokenLang     AlexPosn String
   | TokenData     AlexPosn
   | TokenDef      AlexPosn
+  | TokenClass    AlexPosn
   | TokenCase     AlexPosn
   | TokenSep      AlexPosn
   | TokenLet      AlexPosn
