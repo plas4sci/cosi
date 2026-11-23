@@ -11,6 +11,7 @@ import Lang.Desugar     (desugar)
 import Lang.ExtractPy   (extractProgram)
 import Lang.Syntax
 import Lang.Types
+import Lang.Primitives  (primitiveTypeConstructors)
 import Lang.TypeError
 
 import System.Directory (getCurrentDirectory, doesFileExist)
@@ -112,6 +113,8 @@ run report fname0 = do
 
 typeCheck :: [Option] -> Program 'Desugared -> Either TypeError (Context, Type 0)
 typeCheck options program =
+    -- TODO: extend with user-declared type constructors
+    let ?typeConstructors = primitiveTypeConstructors in
     case typeCheckProgram program of
         Right ty -> Right ty
         Left err -> Left err

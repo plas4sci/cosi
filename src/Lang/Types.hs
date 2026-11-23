@@ -19,14 +19,14 @@ import Data.Maybe (isJust)
 import Data.Either (isRight)
 
 -- Infer the type of an entire program
-typeCheckProgram :: Program 'Desugared -> Either TypeError (Context, Type 0)
+typeCheckProgram :: HasTypeConstructors => Program 'Desugared -> Either TypeError (Context, Type 0)
 typeCheckProgram = typeCheckProgram' [] []
   where
     -- Type check a program
     --   * First argument is a stack of optional return types for function blocks
     --   * Second argument is type context
     --   * Third is the program under checking
-    typeCheckProgram' :: [Maybe (Type 0)] -> Context -> Program 'Desugared -> Either TypeError (Context, Type 0)
+    typeCheckProgram' :: HasTypeConstructors => [Maybe (Type 0)] -> Context -> Program 'Desugared -> Either TypeError (Context, Type 0)
     -- Top level (not inside a function body): fall back to `it`, else Unit
     typeCheckProgram' [] gamma [] =
       case lookup "it" gamma of
@@ -117,10 +117,10 @@ G |- e <= A    check a term has a type
 **********************************
 -}
 
-check :: Context -> Expr -> Type 0 -> Either TypeError ()
+check :: HasTypeConstructors => Context -> Expr -> Type 0 -> Either TypeError ()
 check gamma e ty = annotateWith (exprPos e) (check_ gamma e ty)
 
-check_ :: Context -> Expr -> Type 0 -> Either TypeError ()
+check_ :: HasTypeConstructors => Context -> Expr -> Type 0 -> Either TypeError ()
 
 check_ gamma (Var x) ty =
   case lookup x gamma <|> lookup x dataConstructors of
@@ -300,10 +300,10 @@ Bidirectional synthesis
 **********************************
 -}
 
-synth :: Context -> Expr -> Either TypeError (Type 0)
+synth :: HasTypeConstructors => Context -> Expr -> Either TypeError (Type 0)
 synth gamma e = annotateWith (exprPos e) (synth_ gamma e)
 
-synth_ :: Context -> Expr -> Either TypeError (Type 0)
+synth_ :: HasTypeConstructors => Context -> Expr -> Either TypeError (Type 0)
 
 {-
 
@@ -636,7 +636,7 @@ synth_ gamma (Sig e ty) =
 synth_ gamma e =
    Left $ CannotSynthType e
 
-checkArguments :: Context -> [Expr] -> [Type 0] -> Either TypeError ()
+checkArguments :: HasTypeConstructors => Context -> [Expr] -> [Type 0] -> Either TypeError ()
 checkArguments gamma expressions types
   | length expressions /= length types =
       Left $ ContextualError "Function application has the wrong number of arguments"
@@ -899,7 +899,7 @@ absentOrEqual Nothing  _   = True
 absentOrEqual (Just t) tys = any (\t' -> isRight (descriptionEquality t (IsSpec t'))) tys
 
 -- | Build a (kind-elaborated) Float type with the given description
-floatWithDescription :: Type 0 -> Either TypeError (Type 0)
+floatWithDescription :: HasTypeConstructors => Type 0 -> Either TypeError (Type 0)
 floatWithDescription d = do
   d' <- normalisationByEvaluation d
   checkKind (TyApp (tyCon0 "Float") [d']) type0

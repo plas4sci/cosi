@@ -9,6 +9,7 @@ import Lang.PrettyPrint (pprint)
 import Lang.Types       (synth, errorToString, Context)
 import Lang.Semantics   (bigStep, Env, emptyEnv, Value)
 import Lang.Kinding     (synthKind)
+import Lang.Primitives  (TypeConstructors, primitiveTypeConstructors)
 import Lang.Options     (Option)
 
 import Data.Char          (isSpace)
@@ -29,6 +30,8 @@ data REPLState =
     , env         :: Env
     , options     :: [Option]
     , typingContext :: Context
+      -- TODO: populate from the loaded file's declarations
+    , typeConstructors :: TypeConstructors
   }
 
 initialState :: REPLState
@@ -38,6 +41,7 @@ initialState = REPLState {
    , env         = emptyEnv
    , options     = []
    , typingContext = []
+   , typeConstructors = primitiveTypeConstructors
   }
 
 -- Main REPL
@@ -81,7 +85,8 @@ replLoop state = do
             liftIO $ case parseExpr rest' of
               Left err  -> putStrLn err
               Right expr ->
-                case synth (typingContext state) expr of
+                case let ?typeConstructors = typeConstructors state
+                     in synth (typingContext state) expr of
                   Left err -> let ?srcFile = "<repl>" in putStrLn $ errorToString err
                   Right ty -> putStrLn $ pprint ty
             replLoop state
@@ -90,7 +95,8 @@ replLoop state = do
               liftIO $ case parseType rest' of
                   Left err -> putStrLn err
                   Right ty ->
-                    case synthKind ty of
+                    case let ?typeConstructors = typeConstructors state
+                         in synthKind ty of
                       Left err -> let ?srcFile = "<repl>" in putStrLn $ errorToString err
                       Right (ty', kind) -> do
                         if ty /= ty'

@@ -1,8 +1,11 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ImplicitParams #-}
 
 module Lang.Primitives where
 
+import qualified Data.Map as Map
 import Lang.Syntax
 
 type0 :: Type 1
@@ -94,6 +97,19 @@ typeConstructors = [
   , ("J"     , unitBase)
   , ("W"     , unitBase)
  ]
+
+-- | The type constructors in scope (and their kinds), which the kind and
+-- type checker read via the implicit parameter ?typeConstructors. This starts
+-- out as 'primitiveTypeConstructors' and is to be extended by user
+-- declarations of new constructors of open kinds (e.g. new units of measure).
+type TypeConstructors = Map.Map Identifier (Type 1)
+
+type HasTypeConstructors = (?typeConstructors :: TypeConstructors)
+
+-- | The built-in type constructors. On duplicate names the first entry in
+-- 'typeConstructors' wins, matching the previous 'lookup' behaviour.
+primitiveTypeConstructors :: TypeConstructors
+primitiveTypeConstructors = Map.fromListWith (\_new old -> old) typeConstructors
 
 rewriteSI :: String -> String
 rewriteSI "T" = "s"
