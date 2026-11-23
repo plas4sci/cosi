@@ -158,9 +158,15 @@ dimensionBase :: Type 1
 dimensionBase = tyCon1 "DimensionBase"
 
 -- This is actually an open type
--- TODO: internal mechanism for determining what is a closed and open type
 unitBase :: Type 1
 unitBase = tyCon1 "UnitBase"
+
+-- | Open kinds: those to which programs may add new constructors with a
+-- class declaration, e.g. `class _(UnitBase): km : UnitBase`. All other kinds
+-- are closed (e.g. DimensionBase, whose constructors are fixed by the SI
+-- coherence map in 'rewriteSI').
+openKinds :: [Type 1]
+openKinds = [unitBase]
 
 -- TODO: later this will need to be something that is parameterised
 -- and threaded through when we start making things more open
