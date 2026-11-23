@@ -162,7 +162,8 @@ dimensionBase = tyCon1 "DimensionBase"
 unitBase :: Type 1
 unitBase = tyCon1 "UnitBase"
 
-
+-- TODO: later this will need to be something that is parameterised
+-- and threaded through when we start making things more open
 -- | Check if a type constructors a descriptor
 isDescConstructor :: Identifier -> Maybe (Type 1)
 isDescConstructor conId =
