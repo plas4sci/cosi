@@ -845,6 +845,18 @@ errorToString (WellFormednessError err) =
         <> ") is inside a function; class declarations are static (compile-time) "
         <> "and must appear at the top level"
 
+errorToString (ClosedKindExtension kind) =
+  "Cannot declare new constructors of kind " <> pprint kind <> ": it is not an open kind"
+    <> " (open kinds: " <> intercalate ", " (map pprint openKinds) <> ")"
+
+errorToString (ClassMemberKindMismatch c classKind memberKind) =
+  "`" <> c <> "` is declared with kind " <> pprint memberKind
+    <> " in a class extending kind " <> pprint classKind
+
+errorToString (ConstructorRedeclared c existingKind newKind) =
+  "`" <> c <> "` is already declared with kind " <> pprint existingKind
+    <> " so cannot also have kind " <> pprint newKind
+
 errorToString (ContextualError msg) =
   msg
 
