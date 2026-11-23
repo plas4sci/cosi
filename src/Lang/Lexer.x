@@ -26,7 +26,7 @@ $greekLower      = [\x03B1-\x03C9\x03D1\x03D5\x03D6\x03F5] -- α-ω, ϑ ϕ ϖ ϵ
 $letterlikeMath  = [\x2113\x210F\x2135-\x2138]              -- ℓ ℏ ℵ ℶ ℷ ℸ
 $unicodeAlpha    = [$greekUpper $greekLower $letterlikeMath]
 
-$alpha  = [a-zA-Z\_\-$unicodeAlpha]
+$alpha  = [a-zA-Z\_$unicodeAlpha]
 $lower  = [a-z]
 $upper  = [A-Z]
 $eol    = [\n]
