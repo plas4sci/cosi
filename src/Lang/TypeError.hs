@@ -63,7 +63,7 @@ data TypeError
   -- Class declaration errors
   | ClosedKindExtension (Type 1)                       -- class extends a kind that is not open
   | ClassMemberKindMismatch Identifier (Type 1) (Type 1) -- member, class kind, member kind
-  | ConstructorRedeclared Identifier (Type 1) (Type 1)   -- constructor, existing kind, new kind
+  | ConstructorRedeclared Identifier (Type 1)          -- constructor declared twice at this kind
   
   -- Generic/contextual errors
   | ContextualError String

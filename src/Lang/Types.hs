@@ -15,31 +15,36 @@ import Lang.Descriptions
 import Lang.TypeHelpers
 import Lang.TypeError
 import Data.List (intercalate)
+import Control.Monad (foldM)
 import qualified Data.Map as Map
 
 import Data.Maybe (isJust)
 import Data.Either (isRight)
 
 -- | Collect the type constructors declared by the (top-level) class
--- declarations, to augment open types. 
--- This function returns the newly defined type constructors before
--- type checking
-
+-- declarations, to augment open types, before type checking. Returns the
+-- given type constructors extended with the newly declared ones.
+--
 -- The class names are ignored (could be `_`)
 -- TODO: think about whether want something else with class names later
 buildTypes :: TypeConstructors -> Program p -> Either TypeError TypeConstructors
 buildTypes inScope defs = do
-  classes  <- sequence [ classConstructors kind members | ClassDef _ kind members <- defs ]
-  return $ foldr Map.union inScope classes
+  members <- concat <$> sequence [ classMembers kind cs | ClassDef _ kind cs <- defs ]
+  foldM declare inScope members
   where
-    classConstructors kind members
-      -- Check that we this is even an 'open' type.
+    classMembers kind cs
+      -- Check that this is even an 'open' type
       | kind `notElem` openKinds = Left $ ClosedKindExtension kind
-      | otherwise                = Map.fromList <$> mapM (member kind) members
+      | otherwise                = mapM (member kind) cs
     -- Check that we are building constructors that actually match the head class
     member kind (c, k)
       | k /= kind = Left $ ClassMemberKindMismatch c kind k
       | otherwise = Right (c, k)
+    -- Add a constructor, rejecting one already declared at the same kind. The
+    -- same name at a different kind is deliberately not checked.
+    declare tcs (c, k)
+      | Map.lookup c tcs == Just k = Left $ ConstructorRedeclared c k
+      | otherwise                  = Right (Map.insert c k tcs)
 
 -- Infer the type of an entire program, given the typing context of anything
 -- it imports
@@ -875,9 +880,8 @@ errorToString (ClassMemberKindMismatch c classKind memberKind) =
   "`" <> c <> "` is declared with kind " <> pprint memberKind
     <> " in a class extending kind " <> pprint classKind
 
-errorToString (ConstructorRedeclared c existingKind newKind) =
-  "`" <> c <> "` is already declared with kind " <> pprint existingKind
-    <> " so cannot also have kind " <> pprint newKind
+errorToString (ConstructorRedeclared c kind) =
+  "`" <> c <> "` is already declared with kind " <> pprint kind
 
 errorToString (ContextualError msg) =
   msg
