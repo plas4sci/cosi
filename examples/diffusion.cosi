@@ -1,5 +1,8 @@
 # 1D discrete diffusion example for some species X
 
+class _(SpeciesBase):
+    X : SpeciesBase
+
 """Diffusion coefficient of X"""
 D  : Float[Unit[m^2 / s] & Species[X]] = 0.1
 

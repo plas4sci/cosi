@@ -1,2 +1,5 @@
+class _(QuantityBase):
+    length : QuantityBase
+
 y : Float[Unit[m] & Quantity[length]] = 2.0
 it : Float[Unit[m] & Quantity[length]] = y * y

@@ -2,6 +2,10 @@
 A unit does not determine a kind of quantity, so t (in seconds) cannot be
 combined with a length quantity without saying what quantity it is.
 """
+
+class _(QuantityBase):
+    length : QuantityBase
+
 x : Float[Unit[m] & Quantity[length]] = 1.0
 t : Float[Unit[s]] = 4.0
 it = x / t

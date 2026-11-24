@@ -103,11 +103,9 @@ checkKind (ExponentTy t n) k = do
 
 -- WIP: this will change at some point once open and closed kinds are fully integrated
 
--- A base symbol may be registered under one specific (closed) kind, such
--- as DimensionBase, and still be used freely as a Unit symbol: "Type" is
--- always open to any symbol, closed kinds require an exact registration
--- match. This lets e.g. "J" mean both the luminous-intensity dimension
--- (Dimension[J], kind DimensionBase) and Joules (Unit[J], kind Type).
+-- "Type" is open to any symbol, whereas any other kind (e.g. a generator
+-- set such as UnitBase) requires the symbol to be registered at that kind,
+-- either as a primitive or by a class declaration.
 checkKind t@(TyCon ZeroP c) k
   | k == type0                                    = return t
   | Just k' <- Map.lookup c ?typeConstructors, k' == k = return t

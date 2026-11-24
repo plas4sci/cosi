@@ -1,1 +1,1 @@
-tests/cases/negative/units-mismatch2.cosi:2:44: Expecting descriptor `length` but got `length^2`
+tests/cases/negative/units-mismatch2.cosi:5:44: Expecting descriptor `length` but got `length^2`

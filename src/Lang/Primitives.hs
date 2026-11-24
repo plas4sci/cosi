@@ -31,11 +31,11 @@ boolTy t = TyApp (ImplicitTyApp (tyCon0 "Bool") (tyCon1 "Base")) [t]
 
 -- | Smart constructors for the descriptors of graded types
 unitTy, dimensionTy, quantityTy, speciesTy, basisTy :: Type 0 -> Type 0
-unitTy t      = TyApp (tyCon0 "Unit") [t]
+unitTy t      = TyApp (tyCon0 "Unit")      [t]
 dimensionTy t = TyApp (tyCon0 "Dimension") [t]
-quantityTy t  = TyApp (tyCon0 "Quantity") [t]
-speciesTy t   = TyApp (tyCon0 "Species") [t]
-basisTy t     = TyApp (tyCon0 "Basis") [t]
+quantityTy t  = TyApp (tyCon0 "Quantity")  [t]
+speciesTy t   = TyApp (tyCon0 "Species")   [t]
+basisTy t     = TyApp (tyCon0 "Basis")     [t]
 
 -- | The quantity of angles
 angleQuantity :: Type 0
@@ -80,16 +80,20 @@ dataConstructors = [
 
 -- | The descriptor kinds, each paired with the type constructor that forms
 -- its descriptors from a field of the given kind, e.g. Unit[m] : UoM from
--- m : UoMBase. The constructor also names the kind's component in the
+-- m : UnitBase. The constructor also names the kind's component in the
 -- representation of a description.
+--
+-- Convention: a constructor X that is parametric in a set of generators
+-- has kind X : XBase -> D, i.e., its generators have kind XBase ('baseOf').
+-- Every such generator set is open (see 'openKinds').
 descriptorKinds :: [(Identifier, (Identifier, Type 1))]
 descriptorKinds =
   [ ("UoM",         ("Unit",      unitBase))
-  , ("KoQ",         ("Quantity",  type0))
-  , ("SpeciesType", ("Species",   type0))
-  , ("BasisType",   ("Basis",     type0)) -- TODO: type0 should be the open type Bases here
+  , ("KoQ",         ("Quantity",  quantityBase))
+  , ("SpeciesType", ("Species",   speciesBase))
+  , ("BasisType",   ("Basis",     basisBase))
   , ("Dim",         ("Dimension", dimensionBase))
-  , ("AffineSpace", ("Affine",    ratKind)) -- Affine[weight]
+  , ("AffineSpace", ("Affine",    ratKind)) -- Affine[weight], not generated
   ]
 
 typeConstructors :: [(Identifier, Type 1)]
@@ -113,6 +117,8 @@ typeConstructors =
   , ("NPoint",    tyCon1 "AffineSpace")
   , ("Scalar",    FunTy [ratKind] (tyCon1 "AffineSpace")) -- Scalar[value]
   , ("None"     , type0)
+    -- Kinds of quantity
+  , ("Angle"    , quantityBase)
     -- The standard 7 SI base dimensions
   , ("T"        , dimensionBase) -- Time
   , ("L"        , dimensionBase) -- Length
