@@ -1,0 +1,14 @@
+"""Temperatures are points: their differences (anomalies) are vectors"""
+def daily_mean(t_min, t_max) -> Float[Unit[K] & Point]:
+  t_min : Float[Unit[K] & Point]
+  t_max : Float[Unit[K] & Point]
+  t_ave : Float[Unit[K] & Affine[2]] = t_min + t_max
+  return t_ave * 0.5
+
+def anomaly(t, t_base) -> Float[Unit[K] & Vector]:
+  t      : Float[Unit[K] & Point]
+  t_base : Float[Unit[K] & Point]     # climatological baseline
+  anom   : Float[Unit[K] & Vector] = t - t_base
+  return anom
+
+it = anomaly(daily_mean(281.0, 293.0), 286.0)

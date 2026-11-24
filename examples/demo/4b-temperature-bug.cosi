@@ -1,0 +1,7 @@
+"""Temperatures are points: their differences (anomalies) are vectors"""
+def daily_mean(t_min, t_max) -> Float[Unit[K] & Point]:
+  t_min : Float[Unit[K] & Point]
+  t_max : Float[Unit[K] & Point]
+  return t_min + t_max                # forgot to halve
+
+it = daily_mean(281.0, 293.0)

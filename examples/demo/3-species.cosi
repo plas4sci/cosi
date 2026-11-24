@@ -1,0 +1,15 @@
+"""Explain which molecules we care about"""
+class _(SpeciesBase):
+  CO2 : SpeciesBase
+  CH4 : SpeciesBase
+
+def emitted_mass(n) -> Float[Unit[kg] & Species[CO2]]:
+  n              : Float[Unit[mol]      & Species[CO2]]
+  co2_molar_mass : Float[Unit[kg / mol] & Species[CO2]] = 0.044
+  return n * co2_molar_mass
+
+co2_moles : Float[Unit[mol] & Species[CO2]] = 1.0e3
+ch4_moles : Float[Unit[mol] & Species[CH4]] = 1.0e3
+
+it = emitted_mass(co2_moles)   # 44 kg of CO2 emitted
+# it = emitted_mass(ch4_moles) # error: CH4's molar mass for CO2
