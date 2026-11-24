@@ -45,7 +45,8 @@ primitives = [ ("sqrt", VPrimitive "sqrt" sqrtFunc)
               , ("cos", VPrimitive "cos" (floatFunc1 "cos" cos))
               , ("tan", VPrimitive "tan" (floatFunc1 "tan" tan))
               , ("atan2", VPrimitive "atan2" atan2Func)
-              , ("to_SI", VPrimitive "to_SI" idFunc)]
+              , ("to_SI", VPrimitive "to_SI" idFunc)
+              , ("from_SI", VPrimitive "from_SI" idFunc)]
   where
     floatFunc1 _ f [ValExpr (NumFloat n)] = Right $ ValExpr $ NumFloat $ f n
     floatFunc1 name _ _ = Left $ "cosi bug: " <> name <> " expects a single float argument"

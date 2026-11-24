@@ -43,7 +43,13 @@ rewriteSI "U" = Just "A"
 rewriteSI "Ji" = Just "cd"
 rewriteSI x = Nothing
 
--- | The base dimension of an SI base unit, the inverse of rewriteSI
+-- | The dimension of an SI base unit, exactly the inverse of rewriteSI (so
+-- unlike 'dimensionOfSIUnit', a scaled unit such as km has no image)
+dimensionOfSIBaseUnit :: String -> Maybe String
+dimensionOfSIBaseUnit u = lookup u
+  [ (unit, dim) | dim <- ["T", "L", "M", "Theta", "N", "U", "Ji"], Just unit <- [rewriteSI dim] ]
+
+-- | The base dimension of a unit, coherent with rewriteSI
 dimensionOfSIUnit :: String -> Maybe String
 dimensionOfSIUnit u = lookup u
   [("s", "T"), ("m", "L"), ("km", "L"), ("kg", "M"), ("K", "Theta"), ("mol", "N"), ("A", "U"), ("cd", "Ji")]

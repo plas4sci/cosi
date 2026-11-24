@@ -167,6 +167,23 @@ instance Representation DescriptionsRepr where
             _ -> return $ insert "Unit" siUnit (delete "Dimension" d)
         _ -> return d
 
+    -- The inverse of SI: replace an SI unit by its dimension (only defined
+    -- on the SI base units, whose dimensions are given by inverting rewriteSI)
+    computeRepresentation fromTy@(TyApp (TyCon ZeroP "FromSI") [t]) = do
+      d <- computeRepresentation t
+      case Map.lookup "Unit" d of
+        Just (FreeAGroup repr) -> do
+          dim <- case mapM (\(u, n) -> (\dimName -> (dimName, n)) <$> dimensionOfSIBaseUnit u) (assocs repr) of
+                   Just ds -> Right $ FreeAGroup (Map.fromList ds)
+                   Nothing -> Left $ CannotComputeDescriptionRepresentation fromTy
+          case Map.lookup "Dimension" d of
+            Just dim' | dim' /= dim ->
+              Left (DimensionAndUnitIncoherence
+                      (reifyToTypeTerm $ singleton "Dimension" dim')
+                      (reifyToTypeTerm $ singleton "Unit" (FreeAGroup repr)))
+            _ -> return $ insert "Dimension" dim (delete "Unit" d)
+        _ -> return d
+
     -- Free abelian groups
     computeRepresentation (TyApp (TyCon ZeroP "Unit") [t])     = do
         d <- computeRepresentation t

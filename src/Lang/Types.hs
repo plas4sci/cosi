@@ -418,6 +418,16 @@ synth_ gamma (App (Var "to_SI") [e]) = do
         Right t'
       _ -> Left $ ContextualError $ "to_SI expects a Float argument but got " <> pprint t
 
+-- The inverse of to_SI: forget an SI unit in favour of its dimension
+synth_ gamma (App (Var "from_SI") [e]) = do
+    t <- synth gamma e
+    case isGradableNumericType t of
+      Just ("Float", _, d) -> do
+        d' <- normalisationByEvaluation (TyApp (tyCon0 "FromSI") [d])
+        (t', _) <- synthKind (TyApp (tyCon0 "Float") [d'])
+        Right t'
+      _ -> Left $ ContextualError $ "from_SI expects a Float argument but got " <> pprint t
+
 synth_ gamma (App e1 es) =
   -- Synth the left-hand side
   case synth gamma e1 of
