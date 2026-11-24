@@ -4,5 +4,6 @@ def pressure_change(rho, g, dz) -> Float[Dimension[M / (L * T^2)]]:
   g   : Float[Dimension[L / T^2]]     # gravity
   dz  : Float[Dimension[L]]           # layer thickness
   return rho * g * dz
+#  return rho * g / dz                 # wrong operation
 
 it = pressure_change(1.225, 9.81, 100.0)
