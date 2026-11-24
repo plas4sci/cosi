@@ -2,7 +2,7 @@
 - Renamed to cosi (COde with Scientific Intent); source files now use the `.cosi` extension
 - Single `cosi` executable: `cosi` starts the REPL, `cosi file` runs a file, `cosi -i file` loads a file into the REPL (the `.cosi` extension may be omitted)
 - `AffineSpace` is a new descriptor see `examples/affine.cosi` and `examples/linear-interp.cosi`
-- Some kinds are now *open* meaning they can be extended via a class, see
+- Some kinds are now *open* meaning they can be extended via a class, see `examples/quantity.cosi'
 
 # 0.3.0 beta
 - `String` literals

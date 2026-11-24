@@ -6,8 +6,11 @@ class _(QuantityBase):
     length : QuantityBase
     time : QuantityBase
 
-x : Float[Unit[m] & Quantity[length]] = 2.0
-y : Float[Unit[m] & Quantity[length]] = 1.0
-t : Float[Unit[s] & Quantity[time]] = 4.0
+class _(BasisBase):
+    Obj1 : BasisBase
+
+x : Float[Unit[m] & Quantity[length] & Basis[Obj1]] = 2.0
+y : Float[Unit[m] & Quantity[length] & Basis[Obj1]] = 1.0
+t : Float[Unit[s] & Quantity[time] & Basis[Obj1]] = 4.0
 # End result
-it : Float[Unit[m / s] & Quantity[length / time]] = (x + y) / t
+it : Float[Unit[m / s] & Quantity[length / time] & Basis[Obj1]] = (x + y) / t
