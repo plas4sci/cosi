@@ -90,12 +90,6 @@ typeConstructors = [
 
   , ("rad"       , unitBase) -- angles
   , ("deg"       , unitBase) -- angles
-
-  -- TODO: fix open typres then these can be user-defined
-  , ("hour"     , unitBase)
-  , ("min"     , unitBase)
-  , ("J"     , unitBase)
-  , ("W"     , unitBase)
  ]
 
 -- | The type constructors in scope (and their kinds), which the kind and
