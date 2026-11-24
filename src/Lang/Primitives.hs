@@ -179,22 +179,31 @@ base = tyCon1 "Base"
 agroup :: Type 1
 agroup = tyCon1 "AGroup"
 
--- | Closed domain kind for Dimension: only the standard 7 SI base
--- dimensions (and their products/powers) have this kind, unlike Unit's
--- argument (any Type) which is an open set of generators.
-dimensionBase :: Type 1
-dimensionBase = tyCon1 "DimensionBase"
+-- | The kind of the generators of the descriptor constructor X, i.e., XBase
+baseOf :: Identifier -> Type 1
+baseOf con = tyCon1 (con <> "Base")
 
--- This is actually an open type
-unitBase :: Type 1
-unitBase = tyCon1 "UnitBase"
+-- | The generator sets of the descriptor constructors, e.g. the units of
+-- measure (m, s, ...) for Unit, and the SI base dimensions (L, T, ...) for
+-- Dimension
+unitBase, dimensionBase, quantityBase, speciesBase, basisBase :: Type 1
+unitBase      = baseOf "Unit"
+dimensionBase = baseOf "Dimension"
+quantityBase  = baseOf "Quantity"
+speciesBase   = baseOf "Species"
+basisBase     = baseOf "Basis"
+
+-- | The generator sets: the fields of the descriptor constructors that
+-- follow the XBase convention
+baseKinds :: [Type 1]
+baseKinds = [ field | (_, (con, field)) <- descriptorKinds, field == baseOf con ]
 
 -- | Open kinds: those to which programs may add new constructors with a
--- class declaration, e.g. `class _(UnitBase): km : UnitBase`. All other kinds
--- are closed (e.g. DimensionBase, whose constructors are fixed by the SI
--- coherence map in 'rewriteSI').
+-- class declaration, e.g. `class _(UnitBase): km : UnitBase`. These are all
+-- of the generator sets; all other kinds are closed. (A new dimension has no
+-- SI unit, so 'rewriteSI', and hence to_SI, is undefined on it.)
 openKinds :: [Type 1]
-openKinds = [unitBase]
+openKinds = baseKinds
 
 -- TODO: later this will need to be something that is parameterised
 -- and threaded through when we start making things more open
