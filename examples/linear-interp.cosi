@@ -34,7 +34,8 @@ def lerp (p, q, t) -> Float[Unit[s] & Point]:
 
 a : Float[Unit[s] & Point] = 10.0
 b : Float[Unit[s] & Point] = 4.0
-it2 = lerp(a, b, 0.25)
+s : Float[Scalar[1/4]] = 0.25 # Scalar is a substitute for Vector
+it2 = lerp(a, b, s)
 
 # The two results are the same here, but may not be for all
 # floating points
