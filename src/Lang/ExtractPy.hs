@@ -97,6 +97,8 @@ bracketPy e | isLexicallyAtomic e = pyExpr e
 pyExpr :: Expr -> String
 pyExpr (Abs params e)         = "lambda " ++ intercalate ", " (map fst params) ++ ": " ++ pyExpr e
 pyExpr (App (Var "sqrt") [e]) = "math.sqrt(" ++ pyExpr e ++ ")"
+-- SI conversions only change the type (they are the identity on values)
+pyExpr (App (Var f) [e]) | f `elem` ["to_SI", "from_SI"] = "(" ++ pyExpr e ++ ")"
 pyExpr (App e1 es)            = bracketPy e1 ++ "(" ++ intercalate ", " (map pyExpr es) ++ ")"
 pyExpr (Var var)              = var
 -- Type indexing/application, signatures, casts and lifts are all

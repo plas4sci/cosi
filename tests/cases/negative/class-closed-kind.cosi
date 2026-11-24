@@ -1,4 +1,4 @@
-# DimensionBase is closed: its constructors are fixed
-class _(DimensionBase):
-    Q : DimensionBase
+# AffineSpace is closed: its constructors (Point, Vector, ...) are fixed
+class _(AffineSpace):
+    Sideways : AffineSpace
 it = 1.0

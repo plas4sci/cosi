@@ -1,3 +1,6 @@
+class _(BasisBase):
+    Fox : BasisBase
+
 x : Float[Basis[Fox]] = 3.0
 y : Float[Basis[Fox]] = 4.0
 it : Float[Basis[Fox]] = x * y

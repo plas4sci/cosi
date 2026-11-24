@@ -1,0 +1,13 @@
+"""Hydrostatic balance: the pressure change across a layer of thickness dz"""
+def pressure_change(rho, g, dz) -> Float[Dimension[M / (L * T^2)]]:
+  rho : Float[Dimension[M / L^3]]     # air density
+  g   : Float[Dimension[L / T^2]]     # gravity
+  dz  : Float[Dimension[L]]           # layer thickness
+  return rho * g * dz
+
+rho : Float[Unit[kg / m^3]] = 1.225
+g   : Float[Unit[m / s^2]]  = 9.81
+dz  : Float[Unit[m]]        = 100.0
+
+dp : Float[Unit[kg / (m * s^2)]] = to_SI(pressure_change(from_SI(rho), from_SI(g), from_SI(dz)))   # pascals
+it = dp

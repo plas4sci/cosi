@@ -1,1 +1,1 @@
-tests/cases/negative/species-mismatch-mult.cosi:3:30: Description equality failed between Fox and Fox * Rabbit
+tests/cases/negative/species-mismatch-mult.cosi:7:30: Description equality failed between Fox and Fox * Rabbit

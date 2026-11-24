@@ -1,4 +1,6 @@
-# data Description += SpecificHeat
+class _(QuantityBase):
+    SpecificHeat : QuantityBase
+
 cp : Float[Unit[kg] & Quantity[SpecificHeat]] = 2.0
 theta : Float[Unit[m]] = 3.0
 it = cp

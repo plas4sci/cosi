@@ -29,6 +29,29 @@ stringTy t = TyApp (ImplicitTyApp (tyCon0 "String") (tyCon1 "Base")) [t]
 boolTy :: Type 0 -> Type 0
 boolTy t = TyApp (ImplicitTyApp (tyCon0 "Bool") (tyCon1 "Base")) [t]
 
+-- | Smart constructors for the descriptors of graded types
+unitTy, dimensionTy, quantityTy, speciesTy, basisTy :: Type 0 -> Type 0
+unitTy t      = TyApp (tyCon0 "Unit")      [t]
+dimensionTy t = TyApp (tyCon0 "Dimension") [t]
+quantityTy t  = TyApp (tyCon0 "Quantity")  [t]
+speciesTy t   = TyApp (tyCon0 "Species")   [t]
+basisTy t     = TyApp (tyCon0 "Basis")     [t]
+
+-- | The quantity of angles
+angleQuantity :: Type 0
+angleQuantity = quantityTy (tyCon0 "Angle")
+
+-- | Affine-space descriptors: the names for the weights 1, 0 and -1, the
+-- general form Affine[weight], and a scalar of known value Scalar[c]
+pointTy, vectorTy, npointTy :: Type 0
+pointTy  = tyCon0 "Point"
+vectorTy = tyCon0 "Vector"
+npointTy = tyCon0 "NPoint"
+
+affineTy, scalarTy :: Rational -> Type 0
+affineTy w = TyApp (tyCon0 "Affine") [TyRat w]
+scalarTy c = TyApp (tyCon0 "Scalar") [TyRat c]
+
 desc :: Type 1
 desc = tyCon1 "Descriptor"
 
@@ -44,6 +67,10 @@ desc2 = tyCon2 "Descriptor"
 
 -- ]
 
+-- | The kind of type-level rationals such as the weight in Affine[1/2]
+ratKind :: Type 1
+ratKind = tyCon1 "Rational"
+
 dataConstructors :: [(Identifier, Type 0)]
 dataConstructors = [
     ("None"     , tyCon0 "None")
@@ -51,8 +78,29 @@ dataConstructors = [
   , ("False"    , boolTy (tyCon0 "1"))
  ]
 
+-- | The descriptor kinds, each paired with the type constructor that forms
+-- its descriptors from a field of the given kind, e.g. Unit[m] : UoM from
+-- m : UnitBase. The constructor also names the kind's component in the
+-- representation of a description.
+--
+-- Convention: a constructor X that is parametric in a set of generators
+-- has kind X : XBase -> D, i.e., its generators have kind XBase ('baseOf').
+-- Every such generator set is open (see 'openKinds').
+descriptorKinds :: [(Identifier, (Identifier, Type 1))]
+descriptorKinds =
+  [ ("UoM",         ("Unit",      unitBase))
+  , ("KoQ",         ("Quantity",  quantityBase))
+  , ("SpeciesType", ("Species",   speciesBase))
+  , ("BasisType",   ("Basis",     basisBase))
+  , ("Dim",         ("Dimension", dimensionBase))
+  , ("AffineSpace", ("Affine",    ratKind)) -- Affine[weight], not generated
+  ]
+
 typeConstructors :: [(Identifier, Type 1)]
-typeConstructors = [
+typeConstructors =
+  -- the constructors of each descriptor kind from its field
+  [ (con, FunTy [field] (tyCon1 kind)) | (kind, (con, field)) <- descriptorKinds ]
+  ++ [
      -- Graded float
     ("Float"    , ImplicitFunTy "d" desc2 (FunTy [tyVar "d"] type0))
      -- Graded integer
@@ -62,15 +110,15 @@ typeConstructors = [
     -- Graded boolean
   , ("Bool"     , ImplicitFunTy "d" desc2 (FunTy [tyVar "d"] type0))
   , ("Nat"      , type0)
-  , ("Unit"     , FunTy [unitBase] (tyCon1 "UoM"))
-  , ("Quantity" , FunTy [type0] (tyCon1 "KoQ"))
-  , ("Species"  , FunTy [type0] (tyCon1 "SpeciesType"))
-  , ("Basis"    , FunTy [type0] (tyCon1 "BasisType")) -- TODO: type0 should be the open type Bases here
-  , ("Dimension", FunTy [dimensionBase] (tyCon1 "Dim"))
   -------
-  , ("Point",     FunTy [type0] (tyCon1 "AffineTy"))
-  , ("Vector",    FunTy [type0] (tyCon1 "AffineTy"))
+    -- the other constructors of affine-space descriptors
+  , ("Point",     tyCon1 "AffineSpace")
+  , ("Vector",    tyCon1 "AffineSpace")
+  , ("NPoint",    tyCon1 "AffineSpace")
+  , ("Scalar",    FunTy [ratKind] (tyCon1 "AffineSpace")) -- Scalar[value]
   , ("None"     , type0)
+    -- Kinds of quantity
+  , ("Angle"    , quantityBase)
     -- The standard 7 SI base dimensions
   , ("T"        , dimensionBase) -- Time
   , ("L"        , dimensionBase) -- Length
@@ -82,6 +130,7 @@ typeConstructors = [
     -- The standard 7 SI units of measure
   , ("s"        , unitBase) -- seconds
   , ("m"        , unitBase) -- metres
+      , ("km"        , unitBase) -- kilometres [for demonstration]
   , ("kg"       , unitBase) -- kilograms
   , ("K"        , unitBase) -- Kelvin
   , ("mol"      , unitBase) -- moles
@@ -105,16 +154,6 @@ type HasTypeConstructors = (?typeConstructors :: TypeConstructors)
 primitiveTypeConstructors :: TypeConstructors
 primitiveTypeConstructors = Map.fromListWith (\_new old -> old) typeConstructors
 
-rewriteSI :: String -> String
-rewriteSI "T" = "s"
-rewriteSI "L" = "m"
-rewriteSI "M" = "kg"
-rewriteSI "Theta" = "K"
-rewriteSI "N" = "mol"
-rewriteSI "U" = "A"
-rewriteSI "Ji" = "cd"
-rewriteSI x = error $ "Unknown SI dimension " <> x
-
 typeAliases :: [(Identifier, Type 0)]
 typeAliases = [
     ("str", stringTy (tyCon0 "1"))
@@ -133,8 +172,9 @@ kindConstructors = [
   , ("SpeciesType", desc2)
   , ("BasisType" , desc2)
   , ("Dim"      , desc2)
-  , ("Base"     , desc2) -- The base Descriptor (bottom)
+  , ("AffineSpace", desc2)
   -- Products of descriptors
+  , ("Base"     , desc2) -- The base Descriptor (bottom)
   , ("&"        , FunTy [desc2, desc2] desc2)
   ]
 
@@ -145,22 +185,31 @@ base = tyCon1 "Base"
 agroup :: Type 1
 agroup = tyCon1 "AGroup"
 
--- | Closed domain kind for Dimension: only the standard 7 SI base
--- dimensions (and their products/powers) have this kind, unlike Unit's
--- argument (any Type) which is an open set of generators.
-dimensionBase :: Type 1
-dimensionBase = tyCon1 "DimensionBase"
+-- | The kind of the generators of the descriptor constructor X, i.e., XBase
+baseOf :: Identifier -> Type 1
+baseOf con = tyCon1 (con <> "Base")
 
--- This is actually an open type
-unitBase :: Type 1
-unitBase = tyCon1 "UnitBase"
+-- | The generator sets of the descriptor constructors, e.g. the units of
+-- measure (m, s, ...) for Unit, and the SI base dimensions (L, T, ...) for
+-- Dimension
+unitBase, dimensionBase, quantityBase, speciesBase, basisBase :: Type 1
+unitBase      = baseOf "Unit"
+dimensionBase = baseOf "Dimension"
+quantityBase  = baseOf "Quantity"
+speciesBase   = baseOf "Species"
+basisBase     = baseOf "Basis"
+
+-- | The generator sets: the fields of the descriptor constructors that
+-- follow the XBase convention
+baseKinds :: [Type 1]
+baseKinds = [ field | (_, (con, field)) <- descriptorKinds, field == baseOf con ]
 
 -- | Open kinds: those to which programs may add new constructors with a
--- class declaration, e.g. `class _(UnitBase): km : UnitBase`. All other kinds
--- are closed (e.g. DimensionBase, whose constructors are fixed by the SI
--- coherence map in 'rewriteSI').
+-- class declaration, e.g. `class _(UnitBase): km : UnitBase`. These are all
+-- of the generator sets; all other kinds are closed. (A new dimension has no
+-- SI unit, so 'rewriteSI', and hence to_SI, is undefined on it.)
 openKinds :: [Type 1]
-openKinds = [unitBase]
+openKinds = baseKinds
 
 -- TODO: later this will need to be something that is parameterised
 -- and threaded through when we start making things more open

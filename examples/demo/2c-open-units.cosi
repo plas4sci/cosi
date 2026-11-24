@@ -1,0 +1,11 @@
+"""Units are an open type: declare the ones your model uses"""
+class _(UnitBase):
+    day : UnitBase
+    mm  : UnitBase
+
+def accumulate(rate, days) -> Float[Unit[mm]]:
+  rate : Float[Unit[mm / day]]       # precipitation rate
+  days : Float[Unit[day]]
+  return rate * days
+
+it = accumulate(3.2, 7.0)

@@ -1,0 +1,8 @@
+"""Interpolating temperature between two model levels"""
+def lerp(p, q, t) -> Float[Unit[K] & Point]:
+  p : Float[Unit[K] & Point]
+  q : Float[Unit[K] & Point]
+  t : Float[Vector]                   # how far from p towards q
+  return p + t * (q - p)
+
+it = lerp(280.0, 270.0, 0.25)

@@ -1,3 +1,7 @@
+class _(SpeciesBase):
+    Fox : SpeciesBase
+    Rabbit : SpeciesBase
+
 x : Float[Species[Fox]] = 3.0
 y : Float[Species[Rabbit]] = 4.0
 it : Float[Species[Fox]] = x + y

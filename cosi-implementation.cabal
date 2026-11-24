@@ -28,6 +28,7 @@ library
       Lang.Desugar
       Lang.FirstParameter
       Lang.Helpers
+      Lang.Homomorphisms
       Lang.Kinding
       Lang.Lexer
       Lang.Main
@@ -61,6 +62,7 @@ executable cosi
       Lang.FirstParameter
       Lang.Frontend
       Lang.Helpers
+      Lang.Homomorphisms
       Lang.Kinding
       Lang.Lexer
       Lang.Options

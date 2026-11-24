@@ -28,6 +28,12 @@ checkKind (FunTy ts t2) k = do
 -- :k Float : {d : Desc} -> d -> Type
 -- U[m] : UoM
 -- therefore elaborate to Float[{UoM}][U[m]]
+-- Type-level rationals: numerals and fractions elaborate to a rational literal
+checkKind t k
+  | k == ratKind = case rationalOfType t of
+      Just r  -> return (TyRat r)
+      Nothing -> Left $ KindMismatch k type0 (Just t)
+
 checkKind t@(TyApp t1 ts) k = do
   (t1', k1) <- synthKind t1
   case k1 of
@@ -77,12 +83,8 @@ checkKind t@(TyCon _ c) k | k == agroup =
 checkKind t@(TyCon _ "1") (TyCon _ "Base") =
   return t
 
--- Allow 1 to be an element of "UnitBase" (dimensionless)
-checkKind t@(TyCon _ "1") (TyCon _ "UnitBase") =
-  return t
-
--- Allow 1 to be an element of "DimensionBase" (dimensionless)
-checkKind t@(TyCon _ "1") (TyCon _ "DimensionBase") =
+-- Allow 1 to be an element of every generator set XBase (e.g. dimensionless)
+checkKind t@(TyCon _ "1") k | k `elem` baseKinds =
   return t
 
 -- Push the expected kind down through products and exponents
@@ -91,17 +93,19 @@ checkKind (ProdTy t1 t2) k = do
   t2' <- checkKind t2 k
   return $ ProdTy t1' t2'
 
+checkKind (NegTy t) k = do
+  t' <- checkKind t k
+  return $ NegTy t'
+
 checkKind (ExponentTy t n) k = do
   t' <- checkKind t k
   return $ ExponentTy t' n
 
 -- WIP: this will change at some point once open and closed kinds are fully integrated
 
--- A base symbol may be registered under one specific (closed) kind, such
--- as DimensionBase, and still be used freely as a Unit symbol: "Type" is
--- always open to any symbol, closed kinds require an exact registration
--- match. This lets e.g. "J" mean both the luminous-intensity dimension
--- (Dimension[J], kind DimensionBase) and Joules (Unit[J], kind Type).
+-- "Type" is open to any symbol, whereas any other kind (e.g. a generator
+-- set such as UnitBase) requires the symbol to be registered at that kind,
+-- either as a primitive or by a class declaration.
 checkKind t@(TyCon ZeroP c) k
   | k == type0                                    = return t
   | Just k' <- Map.lookup c ?typeConstructors, k' == k = return t
@@ -221,6 +225,12 @@ synthKind (ProdTy t1 t2) = do
 synthKind (SumTy t1 t2) = do
   (t1', t2', k) <- synthCheckPair t1 t2
   return $ (SumTy t1' t2', k) 
+
+synthKind t@(TyRat _) = return (t, type0)
+
+synthKind (NegTy t) = do
+  (t', k) <- synthKind t
+  return (NegTy t', k)
 
 synthKind (ExponentTy t n) = do
  (t', k) <- synthKind t

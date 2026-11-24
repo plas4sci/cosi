@@ -1,3 +1,6 @@
+class _(QuantityBase):
+    Length : QuantityBase
+
 y : Float[Unit[m] & Quantity[Length]] = 2.0
 z : Float[Quantity[Length] & Unit[m]] = y # commutativity
 it = y + z

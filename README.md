@@ -61,7 +61,7 @@ Running `cosi` with no arguments starts the interactive REPL, which supports int
 % cosi
 ...
 > :l examples/units.cosi
-Well-typed as Float[{UoM}][Unit[(m * s^-1.0)]]
+Well-typed as Float[{UoM}][Unit[(m * s^-1)]]
 0.25
 units> x
 1.0

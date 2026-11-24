@@ -1,6 +1,11 @@
 """
 Simple example showing units and quantities
 """
+
+class _(QuantityBase):
+    length : QuantityBase
+    time : QuantityBase
+
 x : Float[Unit[m] & Quantity[length]] = 2.0
 y : Float[Unit[m] & Quantity[length]] = 1.0
 t : Float[Unit[s] & Quantity[time]] = 4.0
