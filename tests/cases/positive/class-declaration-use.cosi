@@ -1,0 +1,8 @@
+# Declared units can be used in types, even before their declaration
+d : Float[Unit[km]] = 2.0
+t : Float[Unit[hr]] = 0.5
+it = d / t
+
+class _(UnitBase):
+    km : UnitBase
+    hr : UnitBase

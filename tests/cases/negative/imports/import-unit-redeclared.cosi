@@ -1,0 +1,7 @@
+# An imported unit cannot be declared again at the same kind
+from _neg_lib import *
+
+class _(UnitBase):
+    furlong : UnitBase
+
+it = 1.0

@@ -1,0 +1,1 @@
+Malformed program: class declaration (of `km`) is inside a function; class declarations are static (compile-time) and must appear at the top level
