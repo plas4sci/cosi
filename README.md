@@ -150,6 +150,8 @@ and early ideas we had about building languages for science, in this paper:
 
 There are some similarities to [F#](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/units-of-measure) but cosi's aim is to be much more general and flexible, going beyond units-of-measure.
 
+* You can see slides from a talk about these ideas that I (Dominic) gave in [November 2026 at ECMWF](https://drive.google.com/file/d/1oKRIpfI-6np-mkA-obT2AeEIo_ZGZcAp/view?usp=drive_link.).
+
 
 ## Contributing
 
