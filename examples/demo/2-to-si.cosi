@@ -10,3 +10,4 @@ g   : Float[Unit[m / s^2]]  = 9.81
 dz  : Float[Unit[m]]        = 100.0
 
 dp : Float[Unit[kg / (m * s^2)]] = to_SI(pressure_change(from_SI(rho), from_SI(g), from_SI(dz)))   # pascals
+it = dp
