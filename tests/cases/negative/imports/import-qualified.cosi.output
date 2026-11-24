@@ -1,0 +1,1 @@
+tests/cases/negative/imports/import-qualified.cosi: `import _neg_lib` is not supported yet, as qualified names (`_neg_lib.x`) are not available; use `from _neg_lib import *` or `from _neg_lib import x, y`

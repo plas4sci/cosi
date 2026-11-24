@@ -1,8 +1,11 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ImplicitParams #-}
 
 module Lang.Primitives where
 
+import qualified Data.Map as Map
 import Lang.Syntax
 
 type0 :: Type 1
@@ -130,13 +133,20 @@ typeConstructors =
 
   , ("rad"       , unitBase) -- angles
   , ("deg"       , unitBase) -- angles
-
-  -- TODO: fix open typres then these can be user-defined
-  , ("hour"     , unitBase)
-  , ("min"     , unitBase)
-  , ("J"     , unitBase)
-  , ("W"     , unitBase)
  ]
+
+-- | The type constructors in scope (and their kinds), which the kind and
+-- type checker read via the implicit parameter ?typeConstructors. This starts
+-- out as 'primitiveTypeConstructors' and is to be extended by user
+-- declarations of new constructors of open kinds (e.g. new units of measure).
+type TypeConstructors = Map.Map Identifier (Type 1)
+
+type HasTypeConstructors = (?typeConstructors :: TypeConstructors)
+
+-- | The built-in type constructors. On duplicate names the first entry in
+-- 'typeConstructors' wins, matching the previous 'lookup' behaviour.
+primitiveTypeConstructors :: TypeConstructors
+primitiveTypeConstructors = Map.fromListWith (\_new old -> old) typeConstructors
 
 typeAliases :: [(Identifier, Type 0)]
 typeAliases = [
@@ -176,11 +186,18 @@ dimensionBase :: Type 1
 dimensionBase = tyCon1 "DimensionBase"
 
 -- This is actually an open type
--- TODO: internal mechanism for determining what is a closed and open type
 unitBase :: Type 1
 unitBase = tyCon1 "UnitBase"
 
+-- | Open kinds: those to which programs may add new constructors with a
+-- class declaration, e.g. `class _(UnitBase): km : UnitBase`. All other kinds
+-- are closed (e.g. DimensionBase, whose constructors are fixed by the SI
+-- coherence map in 'rewriteSI').
+openKinds :: [Type 1]
+openKinds = [unitBase]
 
+-- TODO: later this will need to be something that is parameterised
+-- and threaded through when we start making things more open
 -- | Check if a type constructors a descriptor
 isDescConstructor :: Identifier -> Maybe (Type 1)
 isDescConstructor conId =

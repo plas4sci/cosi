@@ -1,0 +1,4 @@
+# A module's `it` (its result) is not imported, so this program has no result
+from _import_lib import *
+
+x : Float[Unit[m]] = 1.0

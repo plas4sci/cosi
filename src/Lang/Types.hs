@@ -14,20 +14,49 @@ import Lang.Primitives
 import Lang.Descriptions
 import Lang.TypeHelpers
 import Lang.TypeError
+import Data.List (intercalate)
+import Control.Monad (foldM)
+import qualified Data.Map as Map
 
 import Data.Maybe (isJust)
 import Data.Either (isRight)
 import Data.Bifunctor (first)
 
--- Infer the type of an entire program
-typeCheckProgram :: Program 'Desugared -> Either TypeError (Context, Type 0)
-typeCheckProgram = typeCheckProgram' [] []
+-- | Collect the type constructors declared by the (top-level) class
+-- declarations, to augment open types, before type checking. Returns the
+-- given type constructors extended with the newly declared ones.
+--
+-- The class names are ignored (could be `_`)
+-- TODO: think about whether want something else with class names later
+buildTypes :: TypeConstructors -> Program p -> Either TypeError TypeConstructors
+buildTypes inScope defs = do
+  members <- concat <$> sequence [ classMembers kind cs | ClassDef _ kind cs <- defs ]
+  foldM declare inScope members
+  where
+    classMembers kind cs
+      -- Check that this is even an 'open' type
+      | kind `notElem` openKinds = Left $ ClosedKindExtension kind
+      | otherwise                = mapM (member kind) cs
+    -- Check that we are building constructors that actually match the head class
+    member kind (c, k)
+      | k /= kind = Left $ ClassMemberKindMismatch c kind k
+      | otherwise = Right (c, k)
+    -- Add a constructor, rejecting one already declared at the same kind. The
+    -- same name at a different kind is deliberately not checked.
+    declare tcs (c, k)
+      | Map.lookup c tcs == Just k = Left $ ConstructorRedeclared c k
+      | otherwise                  = Right (Map.insert c k tcs)
+
+-- Infer the type of an entire program, given the typing context of anything
+-- it imports
+typeCheckProgram :: HasTypeConstructors => Context -> Program 'Desugared -> Either TypeError (Context, Type 0)
+typeCheckProgram = typeCheckProgram' []
   where
     -- Type check a program
     --   * First argument is a stack of optional return types for function blocks
     --   * Second argument is type context
     --   * Third is the program under checking
-    typeCheckProgram' :: [Maybe (Type 0)] -> Context -> Program 'Desugared -> Either TypeError (Context, Type 0)
+    typeCheckProgram' :: HasTypeConstructors => [Maybe (Type 0)] -> Context -> Program 'Desugared -> Either TypeError (Context, Type 0)
     -- Top level (not inside a function body): fall back to `it`, else Unit
     typeCheckProgram' [] gamma [] =
       case lookup "it" gamma of
@@ -118,10 +147,10 @@ G |- e <= A    check a term has a type
 **********************************
 -}
 
-check :: Context -> Expr -> Type 0 -> Either TypeError ()
+check :: HasTypeConstructors => Context -> Expr -> Type 0 -> Either TypeError ()
 check gamma e ty = annotateWith (exprPos e) (check_ gamma e ty)
 
-check_ :: Context -> Expr -> Type 0 -> Either TypeError ()
+check_ :: HasTypeConstructors => Context -> Expr -> Type 0 -> Either TypeError ()
 
 check_ gamma (Var x) ty =
   case lookup x gamma <|> lookup x dataConstructors of
@@ -241,10 +270,10 @@ Bidirectional synthesis
 **********************************
 -}
 
-synth :: Context -> Expr -> Either TypeError (Type 0)
+synth :: HasTypeConstructors => Context -> Expr -> Either TypeError (Type 0)
 synth gamma e = annotateWith (exprPos e) (synth_ gamma e)
 
-synth_ :: Context -> Expr -> Either TypeError (Type 0)
+synth_ :: HasTypeConstructors => Context -> Expr -> Either TypeError (Type 0)
 
 {-
 
@@ -598,7 +627,7 @@ synth_ gamma (Sig e ty) =
 synth_ gamma e =
    Left $ CannotSynthType e
 
-checkArguments :: Context -> [Expr] -> [Type 0] -> Either TypeError ()
+checkArguments :: HasTypeConstructors => Context -> [Expr] -> [Type 0] -> Either TypeError ()
 checkArguments gamma expressions types
   | length expressions /= length types =
       Left $ ContextualError "Function application has the wrong number of arguments"
@@ -831,6 +860,21 @@ errorToString (WellFormednessError err) =
       "function parameter `" <> parameter <> "` has no type annotation"
     DuplicateParameterAnnotation parameter ->
       "function parameter `" <> parameter <> "` is annotated in both the header and body"
+    NestedClassDeclaration constructors ->
+      "class declaration (of " <> intercalate ", " (map (\c -> "`" <> c <> "`") constructors)
+        <> ") is inside a function; class declarations are static (compile-time) "
+        <> "and must appear at the top level"
+
+errorToString (ClosedKindExtension kind) =
+  "Cannot declare new constructors of kind " <> pprint kind <> ": it is not an open kind"
+    <> " (open kinds: " <> intercalate ", " (map pprint openKinds) <> ")"
+
+errorToString (ClassMemberKindMismatch c classKind memberKind) =
+  "`" <> c <> "` is declared with kind " <> pprint memberKind
+    <> " in a class extending kind " <> pprint classKind
+
+errorToString (ConstructorRedeclared c kind) =
+  "`" <> c <> "` is already declared with kind " <> pprint kind
 
 errorToString (ContextualError msg) =
   msg
@@ -890,7 +934,7 @@ absentOrEqual Nothing  _   = True
 absentOrEqual (Just t) tys = any (\t' -> isRight (descriptionEquality t (IsSpec t'))) tys
 
 -- | Build a (kind-elaborated) Float type with the given description
-floatWithDescription :: Type 0 -> Either TypeError (Type 0)
+floatWithDescription :: HasTypeConstructors => Type 0 -> Either TypeError (Type 0)
 floatWithDescription d = do
   d' <- normalisationByEvaluation d
   checkKind (TyApp (tyCon0 "Float") [d']) type0

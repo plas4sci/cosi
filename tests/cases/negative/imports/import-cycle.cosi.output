@@ -1,0 +1,1 @@
+import cycle: tests/cases/negative/imports/_cycle_a.cosi -> tests/cases/negative/imports/_cycle_b.cosi -> tests/cases/negative/imports/_cycle_a.cosi

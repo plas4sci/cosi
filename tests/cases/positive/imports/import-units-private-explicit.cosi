@@ -1,0 +1,5 @@
+# A unit starting with `_` can be imported by naming it explicitly
+from _import_lib import _rod
+
+d : Float[Unit[_rod]] = 4.0
+it = d

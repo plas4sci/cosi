@@ -1,0 +1,5 @@
+# The same name may be declared at a different kind: this is deliberately
+# not checked (L is also the length dimension)
+class _(UnitBase):
+    L : UnitBase
+it = 1.0

@@ -45,6 +45,12 @@ data Def (p :: Phase) where
     TypeDef :: Identifier -> Type n -> Type (1 + n) -> Def p
     DataDef :: Identifier -> [(Identifier, [Type n])] -> Type (1 + n) -> Def p -- Currently not implemented beyond front end
     ImportDef :: ImportSpec -> Def p
+    -- Static (compile-time) declaration of new constructors of an open kind:
+    --   class name(kind):
+    --     c1 : kind1
+    --     ...
+    -- The class name is currently ignored (conventionally `_`).
+    ClassDef :: Identifier -> Type 1 -> [(Identifier, Type 1)] -> Def p
     Return  :: Expr -> Def p
 
 data Lhs (p :: Phase) where

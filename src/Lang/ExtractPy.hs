@@ -8,7 +8,7 @@
 -- once translated to Python: type signatures, casts, lifts, and type
 -- abstraction/application. These are all erasable accroding to the Lang.Semantics
 -- so dropping them and keeping the underlying term preserves cosi's behaviour.
-module Lang.ExtractPy (extractProgram) where
+module Lang.ExtractPy (extractProgram, extractModule) where
 
 import Lang.Syntax
 import Lang.PrettyPrint (pprint, isLexicallyAtomic)
@@ -24,15 +24,35 @@ import Data.List (intercalate, isInfixOf)
 -- prints for the same program.
 extractProgram :: Maybe String -> Program 'Parsed -> String
 extractProgram original defs =
-  let body   = concatMap (extractDef TopLevel) defs
-      whence = case original of
-                 Nothing -> "a cosi program"
-                 Just filename -> "cosi program " ++ filename
-      header = ("# Generated from " ++ whence ++ " by --extract-py")
-             : if any ("math.sqrt(" `isInfixOf`) body then ["import math", ""] else [""]
+  let (imports, body) = extractTopLevel defs
       preamble = ["it = None"]
       trailer  = ["print(it)"]
-  in unlines (header ++ preamble ++ body ++ trailer)
+  in unlines (extractHeader original body ++ imports ++ preamble ++ body ++ trailer)
+
+-- | Render an imported module as Python source: as for a program, but without
+-- setting up and printing `it`, which would otherwise happen on import.
+extractModule :: String -> Program 'Parsed -> String
+extractModule original defs =
+  let (imports, body) = extractTopLevel defs
+  in unlines (extractHeader (Just original) body ++ imports ++ body)
+
+extractHeader :: Maybe String -> [String] -> [String]
+extractHeader original body =
+  let whence = case original of
+                 Nothing -> "a cosi program"
+                 Just filename -> "cosi program " ++ filename
+  in ("# Generated from " ++ whence ++ " by --extract-py")
+     : if any ("math.sqrt(" `isInfixOf`) body then ["import math", ""] else [""]
+
+-- | Split the top level into imports and the rest, as imports go first (so
+-- that a program's `it` is set to `None` after anything they bring in)
+extractTopLevel :: Program 'Parsed -> ([String], [String])
+extractTopLevel defs =
+  ( [ extractImport spec | ImportDef spec <- defs ]
+  , concatMap (extractDef TopLevel) (filter (not . isImport) defs) )
+  where
+    isImport (ImportDef _) = True
+    isImport _             = False
 
 -- | Whether a definition sits at the top level of the program or inside a
 -- function body: a top-level @return@ sets @it@, whereas inside a @def@ it
@@ -51,6 +71,7 @@ extractDef _ (FunDef name _ params _ body) =
 extractDef _ (AnnDef _ _)     = []
 extractDef _ (TypeDef _ _ _)  = []
 extractDef _ (DataDef _ _ _)  = []
+extractDef _ (ClassDef _ _ _) = []
 extractDef _ (ImportDef spec) = [extractImport spec]
 
 -- | Assignment targets, mirroring the source: a plain variable, or a

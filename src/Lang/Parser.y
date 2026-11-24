@@ -26,6 +26,7 @@ import Lang.Options
     nl      { TokenNL _ }
     data    { TokenData _ }
     def     { TokenDef _ }
+    class   { TokenClass _ }
     indent  { TokenIndent _ }
     dedent  { TokenDedent _ }
     from    { TokenFrom _ }
@@ -124,7 +125,20 @@ Def :: { [Option] -> Def 'Parsed}
   | IDENT ':' Type        { \opts -> AnnDef (symString $1) ($3 opts) }
   | def IDENT OptionalTypeParams '(' Parameters ')' OptionalReturnType ':' nl indent BlockDefs dedent
                            { \opts -> FunDef (symString $2) $3 ($5 opts) ($7 opts) ($11 opts) }
+  -- Static declaration of new constructors of an open kind, e.g.
+  --   class _(UnitBase):
+  --     hour : UnitBase
+  | class IDENT '(' Kind ')' ':' nl indent ClassMembers dedent
+                           { \opts -> ClassDef (symString $2) ($4 opts) ($9 opts) }
 --  | data IDENT ':' Kind '=' ConstructorList { \opts -> DataDef (symString $2) ($6 opts) ($4 opts) }
+
+ClassMembers :: { [Option] -> [(Identifier, Type 1)] }
+  : nl ClassMembers                { $2 }
+  | ClassMember nl ClassMembers    { \opts -> ($1 opts) : ($3 opts) }
+  | ClassMember                    { \opts -> [$1 opts] }
+
+ClassMember :: { [Option] -> (Identifier, Type 1) }
+  : IDENT ':' Kind                 { \opts -> (symString $1, $3 opts) }
 
 OptionalReturnType :: { [Option] -> Maybe (Type 0) }
   : '->' Type         { \opts -> Just ($2 opts) }

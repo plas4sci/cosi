@@ -1,0 +1,8 @@
+x : Float[Unit[m]] = 1.0
+
+def f(y : Float[Unit[m]]) -> Float[Unit[m]]:
+    class _(UnitBase):
+        km : UnitBase
+    return y
+
+it = f(x)

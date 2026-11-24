@@ -1,0 +1,3 @@
+# Module names are case sensitive, even on case-insensitive file systems
+from _Neg_lib import *
+it = speed

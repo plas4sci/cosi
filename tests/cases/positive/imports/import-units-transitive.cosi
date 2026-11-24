@@ -1,0 +1,6 @@
+# A module re-exports the units it imports, as well as those it declares
+from _import_reexport import *
+
+pace : Float[Unit[league / fortnight]] = 1.0
+d : Float[Unit[furlong]] = 2.0
+it = (pace, d)

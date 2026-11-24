@@ -3,12 +3,13 @@
 module Lang.REPL where
 
 import Lang.Syntax
-import Lang.Frontend    (banner, run, resolveSourceFile, ansi_bold, ansi_reset)
+import Lang.Frontend    (banner, run, resolveSourceFile, ansi_bold, ansi_reset, LoadedModule(..))
 import Lang.Parser      (parseExpr, parseType)
 import Lang.PrettyPrint (pprint)
 import Lang.Types       (synth, errorToString, Context)
 import Lang.Semantics   (bigStep, Env, emptyEnv, Value)
 import Lang.Kinding     (synthKind)
+import Lang.Primitives  (TypeConstructors, primitiveTypeConstructors)
 import Lang.Options     (Option)
 
 import Data.Char          (isSpace)
@@ -29,6 +30,7 @@ data REPLState =
     , env         :: Env
     , options     :: [Option]
     , typingContext :: Context
+    , typeConstructors :: TypeConstructors
   }
 
 initialState :: REPLState
@@ -38,6 +40,7 @@ initialState = REPLState {
    , env         = emptyEnv
    , options     = []
    , typingContext = []
+   , typeConstructors = primitiveTypeConstructors
   }
 
 -- Main REPL
@@ -69,19 +72,21 @@ replLoop state = do
                   Left err -> do
                     liftIO $ putStrLn err
                     replLoop state
-                  Right (ast', opts, env', expr, ctxt) -> do
-                    liftIO $ displayResult expr
-                    let fileState = FileState { filename = filename fs, ast = ast' }
+                  Right m -> do
+                    liftIO $ displayResult (moduleValue m)
+                    let fileState = FileState { filename = filename fs, ast = moduleProgram m }
                     replLoop $ state { currentFile = Just fileState
-                                      , env = env'
-                                      , options = opts
-                                      , typingContext = ctxt }
+                                      , env = moduleEnv m
+                                      , options = moduleOptions m
+                                      , typingContext = moduleContext m
+                                      , typeConstructors = moduleTypeConstructors m }
 
           't':' ':rest' -> do
             liftIO $ case parseExpr rest' of
               Left err  -> putStrLn err
               Right expr ->
-                case synth (typingContext state) expr of
+                case let ?typeConstructors = typeConstructors state
+                     in synth (typingContext state) expr of
                   Left err -> let ?srcFile = "<repl>" in putStrLn $ errorToString err
                   Right ty -> putStrLn $ pprint ty
             replLoop state
@@ -90,7 +95,8 @@ replLoop state = do
               liftIO $ case parseType rest' of
                   Left err -> putStrLn err
                   Right ty ->
-                    case synthKind ty of
+                    case let ?typeConstructors = typeConstructors state
+                         in synthKind ty of
                       Left err -> let ?srcFile = "<repl>" in putStrLn $ errorToString err
                       Right (ty', kind) -> do
                         if ty /= ty'
@@ -127,14 +133,15 @@ loadFile state path0 = do
   runResult <- run False path
   case runResult of
     Left _ -> return state
-    Right (ast', opts, env', expr, ctxt) -> do
-      displayResult expr
-      let fileState = FileState { filename = path, ast = ast' }
+    Right m -> do
+      displayResult (moduleValue m)
+      let fileState = FileState { filename = path, ast = moduleProgram m }
       return $ state { currentFile = Just fileState
                      , prompt = takeBaseName path
-                     , env = env'
-                     , options = opts
-                     , typingContext = ctxt }
+                     , env = moduleEnv m
+                     , options = moduleOptions m
+                     , typingContext = moduleContext m
+                     , typeConstructors = moduleTypeConstructors m }
 
 -- | Start the REPL, optionally loading a file first.
 repl :: Maybe FilePath -> IO ()

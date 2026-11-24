@@ -7,9 +7,9 @@
 import Test.Tasty (defaultMain, TestTree, testGroup)
 import qualified Test.Tasty.Golden as G
 import Test.Tasty.Golden.Advanced (goldenTest)
-import System.Directory (setCurrentDirectory, getTemporaryDirectory, removeFile, findExecutable)
+import System.Directory (setCurrentDirectory, getTemporaryDirectory, findExecutable, createDirectoryIfMissing, removeDirectoryRecursive)
 import System.Exit (ExitCode(..))
-import System.FilePath (dropExtension, (</>))
+import System.FilePath (dropExtension, (</>), (<.>), takeFileName)
 import System.Process (readProcessWithExitCode)
 import qualified System.IO.Strict as Strict (readFile)
 --import System.Environment
@@ -22,7 +22,6 @@ import qualified Lang.Frontend as Lang
 import Lang.Syntax
 import Lang.Semantics (Value(..), interpret, lookupBinding)
 import Lang.PrettyPrint (pprint)
-import Lang.ExtractPy (extractProgram)
 import Lang.Descriptions (normalisationByEvaluation, descriptionEquality)
 import Lang.TypeHelpers (Specificational(..))
 import Data.List (sort, dropWhileEnd)
@@ -52,8 +51,11 @@ main = do
       throwIO e
     )
 
+-- | Find test files, skipping helper modules (those whose name starts with
+-- `_`) which exist only to be imported by tests, and their output files
 findByExtension :: [FilePath] -> FilePath -> IO [FilePath]
-findByExtension exs path = G.findByExtension exs path >>= (return . sort)
+findByExtension exs path = G.findByExtension exs path >>= (return . sort . filter (not . isHelper))
+  where isHelper file = take 1 (takeFileName file) == "_"
 
 goldenTestsNegative :: IO TestTree
 goldenTestsNegative = do
@@ -121,7 +123,7 @@ grGolden formatResult file = show file `trace` goldenTest
       res <- Lang.runQuiet fp
       case res of
         Left err -> return $ Left err
-        Right (_, _, _, e, _) -> return $ Right e
+        Right m -> return $ Right (Lang.moduleValue m)
 
 -- | Sanity-check the Python extraction against the example programs: for
 -- each file in "examples", extract it to Python, run the result with
@@ -146,15 +148,17 @@ pythonExtractionTest file = testCase file $ do
   result <- Lang.runQuiet file
   case result of
     Left err -> assertFailure $ "cosi failed to typecheck " <> file <> ": " <> err
-    Right (parsetree, _, _, normalForm, _) -> do
-      let expected  = pprint normalForm
-          pySource  = extractProgram (Just file) parsetree
-          tmpName   = map (\c -> if c `elem` ("/\\." :: String) then '_' else c) file <> ".py"
+    Right m -> do
+      let expected  = pprint (Lang.moduleValue m)
+          tmpName   = map (\c -> if c `elem` ("/\\." :: String) then '_' else c) file
+      -- A directory per test, holding the program and the modules it imports
       tmpDir <- getTemporaryDirectory
-      let pyPath = tmpDir </> tmpName
-      writeFile pyPath pySource
+      let pyDir  = tmpDir </> ("cosi-extraction-" <> tmpName)
+          pyPath = pyDir </> tmpName <.> "py"
+      createDirectoryIfMissing True pyDir
+      _ <- Lang.writePython m pyPath
       (exitCode, out, err) <- readProcessWithExitCode "python3" [pyPath] ""
-      removeFile pyPath
+      removeDirectoryRecursive pyDir
       case exitCode of
         ExitFailure _ ->
           assertFailure $ "python3 failed to run extraction of " <> file <> ":\n" <> err

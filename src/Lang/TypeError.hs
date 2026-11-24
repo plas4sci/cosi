@@ -64,6 +64,11 @@ data TypeError
 
   -- Program well-formedness errors
   | WellFormednessError WellFormednessError
+
+  -- Class declaration errors
+  | ClosedKindExtension (Type 1)                       -- class extends a kind that is not open
+  | ClassMemberKindMismatch Identifier (Type 1) (Type 1) -- member, class kind, member kind
+  | ConstructorRedeclared Identifier (Type 1)          -- constructor declared twice at this kind
   
   -- Generic/contextual errors
   | ContextualError String
@@ -79,6 +84,8 @@ data TypeError
 data WellFormednessError
   = MissingParameterAnnotation Identifier
   | DuplicateParameterAnnotation Identifier
+    -- A class declaration (declaring the given constructors) inside a function
+  | NestedClassDeclaration [Identifier]
   deriving (Show)
 
 class MonadAlt m where

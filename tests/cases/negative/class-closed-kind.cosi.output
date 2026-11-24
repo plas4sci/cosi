@@ -1,0 +1,1 @@
+Cannot declare new constructors of kind DimensionBase: it is not an open kind (open kinds: UnitBase)

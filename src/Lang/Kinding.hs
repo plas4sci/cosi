@@ -2,10 +2,12 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ImplicitParams #-}
 
 module Lang.Kinding where
 
 import Control.Monad (zipWithM)
+import qualified Data.Map as Map
 import Lang.Syntax
 import Lang.Primitives
 import Lang.TypeError
@@ -16,7 +18,7 @@ import Lang.TypeHelpers
 
 -- Check if a type is well-kinded against the second argument (kind)
 -- and if so, elaborate any implicit arguments in the type
-checkKind :: Type 0 -> Type 1 -> Either TypeError (Type 0)
+checkKind :: HasTypeConstructors => Type 0 -> Type 1 -> Either TypeError (Type 0)
 checkKind (FunTy ts t2) k = do
   ts' <- mapM (`checkKind` k) ts
   t2' <- checkKind t2 k
@@ -112,7 +114,7 @@ checkKind (ExponentTy t n) k = do
 -- (Dimension[J], kind DimensionBase) and Joules (Unit[J], kind Type).
 checkKind t@(TyCon ZeroP c) k
   | k == type0                                    = return t
-  | Just k' <- lookup c typeConstructors, k' == k = return t
+  | Just k' <- Map.lookup c ?typeConstructors, k' == k = return t
 
 checkKind t k = do
   (t', k') <- synthKind t
@@ -184,10 +186,10 @@ synthSort (TyVar v) = return (TyVar v, TyCon (SuccP (SuccP ZeroP)) "Type")
 
 -- Infer a kind for a type and elaborate the type
 -- at the same time
-synthKind :: Type 0 -> Either TypeError (Type 0, Type 1)
+synthKind :: HasTypeConstructors => Type 0 -> Either TypeError (Type 0, Type 1)
 
 synthKind t@(TyCon ZeroP c) =
-    case lookup c typeConstructors of
+    case Map.lookup c ?typeConstructors of
       Nothing -> --Left $ UnknownTypeConstructor c
                  Right (t, type0)
       Just k' -> Right (t, k')
@@ -257,7 +259,7 @@ synthKind (Forall v t) = do
 
 -- synthKind t = Left $ CannotInferKind t
 
-synthCheckPair :: Type 0 -> Type 0 -> Either TypeError (Type 0, Type 0, Type 1)
+synthCheckPair :: HasTypeConstructors => Type 0 -> Type 0 -> Either TypeError (Type 0, Type 0, Type 1)
 synthCheckPair t1 t2 =
   -- Try to infer the kind of the first type
   case synthKind t1 of
@@ -270,7 +272,7 @@ synthCheckPair t1 t2 =
       t2' <- checkKind t2 k
       return (t1', t2', k)
 
-synthKindFunctionArguments :: [Type 0] -> Either TypeError ([Type 0], Type 1)
+synthKindFunctionArguments :: HasTypeConstructors => [Type 0] -> Either TypeError ([Type 0], Type 1)
 synthKindFunctionArguments [] = Left $ ContextualError "Function types must have at least one argument"
 synthKindFunctionArguments (t:ts) = do
   (t', k) <- synthKind t
