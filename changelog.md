@@ -1,8 +1,21 @@
 # 0.4.0 - cosi! (November 24, 2026)
 - Renamed to cosi (COde with Scientific Intent); source files now use the `.cosi` extension
 - Single `cosi` executable: `cosi` starts the REPL, `cosi file` runs a file, `cosi -i file` loads a file into the REPL (the `.cosi` extension may be omitted)
-- `AffineSpace` is a new descriptor see `examples/affine.cosi` and `examples/linear-interp.cosi`
-- Some kinds are now *open* meaning they can be extended via a class, see `examples/quantity.cosi'
+- `AffineSpace` descriptors generalised to weighted points `Affine[w]` with rational weights (`Point` = 1, `Vector` = 0, `NPoint` = -1, renamed from `DPoint`), and scalars of known value `Scalar[c]` which can be used where a `Vector` is expected, so that e.g. means and linear interpolations of points are well-typed; see `examples/affine.cosi` and `examples/linear-interp.cosi`
+- Some kinds are now *open* meaning they can be extended via a class, e.g. `class _(UnitBase): hour : UnitBase`, see `examples/quantity.cosi`. The generators of a descriptor constructor `X` have kind `XBase` (`UnitBase`, `DimensionBase`, `QuantityBase`, `SpeciesBase`, `BasisBase`), and all of these are open
+- **Breaking**: the generators of `Species`, `Basis` and `Quantity` (e.g. `CO2` in `Species[CO2]`) must now be declared, just as units are (`Angle` is built in)
+- Python-style imports `from m import *` and `from m import x, y`, resolved relative to the importing file, including units declared in other modules (e.g. `lib/more_units.cosi`); names starting with `_` are private, and import cycles are reported
+- Coherence between descriptors, e.g. `Unit[m] & Dimension[T]` is rejected; descriptions are aligned before they are combined, filling in a missing component (e.g. the dimension of an SI unit) only where it is uniquely determined
+- `from_SI` converts SI units to dimensions (the inverse of `to_SI`), see `examples/demo/2-to-si.cosi`
+- Trigonometric functions `sin`, `cos`, `tan` and `atan2`, which work with angles (`Quantity[Angle]`), and units `rad` and `deg`
+- `&` on descriptors is associative and commutative, so the order of descriptors does not matter
+- Integer division `//` and exponentiation `**`, as in Python
+- Type-level exponents are exact rationals, e.g. `Unit[m^(1/2)]`
+- Type application to several arguments, e.g. `const[S, T]`
+- `cosi file --extract-py [output.py]` translates a program (and the modules it imports) to Python
+- Identifiers may start with `_`, and `-` is no longer allowed in identifiers (previously `x-y` was a single identifier)
+- Demo examples in `examples/demo` and links to examples in the README
+- Prebuilt binaries are available on the releases page
 
 # 0.3.0 beta
 - `String` literals
