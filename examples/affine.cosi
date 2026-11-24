@@ -17,16 +17,13 @@ x_forward    : Float[Unit[s] & Point]  = x + dx
 x_backward   : Float[Unit[s] & Point]  = x - dx
 displacement : Float[Unit[s] & Vector] = x - y
 
-c : Float[Unit[1] & Scalar[0.5]] = 0.5
-d : Float[Unit[1] & Scalar[0.15]] = 0.15
-cd : Float[Unit[1] & Scalar[0.65]] = c + d
+"""
+We can sum two points to get an affine weight of 2, which is not a point or a vector.
+"""
+xy : Float[Unit[s] & Affine[2]] = x + y
+"""
+And we can get back a point but we need to scale by 0.5, which is an affine weight of 1/2.
+"""
+mean : Float[Unit[s] & Point]   = xy * 0.5
 
-# cq : Float[Unit[s] & Scalar[0.5]] = 0.5
-
-# bad0 = cq + x
-
-and_then : Float[Unit[s] & Affine[0.5]] = x * c
-
-bad : Float[Unit[s*s] & Vector] = dx * dx
-
-# it = (x_forward, (x_backward, displacement))
+it = (x_forward, (x_backward, (displacement, mean)))
