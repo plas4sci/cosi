@@ -1,0 +1,5 @@
+# `from m import x, y` brings in just the named values
+from _import_lib import speed_of_light, double
+
+len : Float[Unit[m]] = 1.5
+it = (speed_of_light, double(len))

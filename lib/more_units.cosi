@@ -1,0 +1,9 @@
+# Timing units of measure
+class _(UnitBase):
+  hour : UnitBase
+  min  : UnitBase
+
+# Some derive units
+class _(UnitBase):
+  J : UnitBase
+  W : UnitBase

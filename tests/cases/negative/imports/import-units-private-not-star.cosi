@@ -1,0 +1,5 @@
+# `from m import *` does not import units starting with `_`
+from _neg_lib import *
+
+d : Float[Unit[_rod]] = 1.0
+it = d

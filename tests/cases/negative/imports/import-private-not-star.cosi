@@ -1,0 +1,3 @@
+# `from m import *` does not import names starting with `_`
+from _neg_lib import *
+it = _hidden

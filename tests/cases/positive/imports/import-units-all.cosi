@@ -1,0 +1,5 @@
+# `from m import *` brings in the units a module declares
+from _import_lib import *
+
+pace : Float[Unit[furlong / fortnight]] = 2.0
+it = pace

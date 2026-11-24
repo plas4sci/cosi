@@ -1,0 +1,8 @@
+# Class names other than `_` are allowed (and ignored); re-declaring an
+# existing constructor at the same kind is harmless
+class More(UnitBase):
+    km : UnitBase
+    mm : UnitBase
+
+y : Float [Unit[mm]] = 2.0 # millimetesers
+it : Float[Unit[km]] = 1.0

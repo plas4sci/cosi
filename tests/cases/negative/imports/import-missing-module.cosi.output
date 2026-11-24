@@ -1,0 +1,1 @@
+tests/cases/negative/imports/import-missing-module.cosi: cannot find module `math` (looked for tests/cases/negative/imports/math.cosi)

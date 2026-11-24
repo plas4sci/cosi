@@ -1,0 +1,6 @@
+# Units can be imported by name, alongside values
+from _import_lib import furlong, double
+
+d : Float[Unit[furlong]] = 3.0
+len : Float[Unit[m]] = 1.5
+it = (d, double(len))

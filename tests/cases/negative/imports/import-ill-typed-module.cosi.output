@@ -1,0 +1,3 @@
+tests/cases/negative/imports/_ill_typed.cosi:3:22: Expecting descriptor `m` but got `s`
+Trying to check at Float[{UoM}][Unit[s]] but got type Float[{UoM}][Unit[m]]
+(imported via tests/cases/negative/imports/import-ill-typed-module.cosi)
