@@ -45,6 +45,39 @@ Well-typed as Float[{(UoM & KoQ & BasisTy)}][(Unit[(m * s^-1.0)] & Quantity[(len
 The type checker verifies the units and quantities are consistent, and evaluates the result `(2.0 + 1.0) / 4.0 = 0.75` with inferred type equivalent
 to `Float[Unit[m/s] & Quantity[length/time] & Basis[Obj1]]`.
 
+### More examples
+
+Some examples that show off the main ideas (the files in [examples/demo](examples/demo) build up these ideas step by step):
+
+**Units and dimensions**
+- [examples/demo/1-dimensions.cosi](examples/demo/1-dimensions.cosi): hydrostatic balance, written purely in terms of dimensions
+- [examples/flow-rate.cosi](examples/flow-rate.cosi): Torricelli's law for flow through an orifice, with units checked through `sqrt`
+- [examples/energy-balance.cosi](examples/energy-balance.cosi): a zero-dimensional energy balance model of the Earth
+- [tests/cases/positive/align-descriptions.cosi](tests/cases/positive/align-descriptions.cosi): the dimension of a value in SI units is inferred from its unit
+
+**`to_SI` and `from_SI` conversions**
+- [examples/demo/2-to-si.cosi](examples/demo/2-to-si.cosi): inputs in SI units are converted to dimensions with `from_SI`, passed to a law written with dimensions, and the result converted back to SI units (pascals) with `to_SI`
+
+**Species and basis**
+- [examples/demo/3-species.cosi](examples/demo/3-species.cosi): CO2 emissions in moles converted to kilograms (uncomment the last line to see the error from passing CH4 instead)
+- [examples/diffusion.cosi](examples/diffusion.cosi): a diffusion kernel for the concentration of a species `X`
+- [examples/quantity.cosi](examples/quantity.cosi) and [tests/cases/positive/basis-mult.cosi](tests/cases/positive/basis-mult.cosi): values with a `Basis`
+
+**Open types**
+- [examples/coriolis.cosi](examples/coriolis.cosi): imports units and declares a new kind of quantity, `sidereal_day`
+
+**Affine spaces and coherence**
+- [examples/demo/4-temperature.cosi](examples/demo/4-temperature.cosi): temperatures are points, and their differences (anomalies) are vectors
+- [examples/affine.cosi](examples/affine.cosi): points, vectors, and getting back to a point from a weighted sum of points
+- [examples/linear-interp.cosi](examples/linear-interp.cosi): a tutorial on linear interpolation, with scalars whose values are tracked in their types
+
+**Polymorphism**
+- [tests/cases/positive/poly-id.cosi](tests/cases/positive/poly-id.cosi): a polymorphic identity function, using a Python-style type parameter list and explicit type application `id[T]`
+- [tests/cases/positive/poly-const.cosi](tests/cases/positive/poly-const.cosi): a function with two type parameters
+
+**Tuples**
+- [examples/tuples.cosi](examples/tuples.cosi): tuple types and destructuring
+
 ### REPL
 
 Running `cosi` with no arguments starts the interactive REPL, which supports interactive evaluation and type inference. `cosi -i path/to/file` loads a file and then drops you into the REPL with its definitions in scope. In the REPL you can:
