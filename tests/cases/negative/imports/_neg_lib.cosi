@@ -1,6 +1,7 @@
 # Helper module imported by the negative import tests (not a test itself)
 class _(UnitBase):
     furlong : UnitBase
+    _rod    : UnitBase
 
 speed : Float[Unit[m/s]] = 3.0
 _hidden : Float[Unit[1]] = 7.0

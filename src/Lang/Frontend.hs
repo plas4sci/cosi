@@ -11,7 +11,7 @@ import Lang.Desugar     (desugar)
 import Lang.ExtractPy   (extractProgram, extractModule)
 import Lang.Syntax
 import Lang.Types
-import Lang.Primitives  (primitiveTypeConstructors)
+import Lang.Primitives  (TypeConstructors, primitiveTypeConstructors)
 
 import System.Directory (getCurrentDirectory, doesFileExist, canonicalizePath, listDirectory)
 import System.Exit
@@ -65,12 +65,26 @@ extractPy fname rest = do
 -- each module it imports alongside it, returning the paths written.
 writePython :: LoadedModule -> FilePath -> IO [FilePath]
 writePython m outPath = do
-  writeFile outPath (extractProgram (Just (modulePath m)) (moduleProgram m))
+  writeFile outPath (extractProgram (Just (modulePath m)) (pythonImports (moduleProgram m)))
   depPaths <- forM (moduleDependencies m) $ \(name, dep) -> do
     let depPath = takeDirectory outPath </> name <.> "py"
-    writeFile depPath (extractModule (modulePath dep) (moduleProgram dep))
+    writeFile depPath (extractModule (modulePath dep) (pythonImports (moduleProgram dep)))
     return depPath
   return (outPath : depPaths)
+  where
+    -- Names that exist only at the type level (e.g. declared units) are erased
+    -- in Python, so cannot be imported there
+    pythonImports :: Program 'Parsed -> Program 'Parsed
+    pythonImports = concatMap dropTypeLevel
+    dropTypeLevel (ImportDef (ImportOnly name xs)) =
+      case filter (not . typeLevel name) xs of
+        []  -> []
+        xs' -> [ImportDef (ImportOnly name xs')]
+    dropTypeLevel def = [def]
+    typeLevel name x =
+      case lookup name (moduleDependencies m) of
+        Just dep -> Map.member x (moduleTypes dep) && not (Map.member x (moduleValues dep))
+        Nothing  -> False
 
 tryReadFile :: FilePath -> IO (Either IOException String)
 tryReadFile path = try $ do
@@ -134,9 +148,14 @@ data LoadedModule = LoadedModule
   , moduleValue    :: Value
   , moduleContext  :: Context          -- ^ top-level typing context, including imports
   , moduleEnv      :: Env              -- ^ top-level environment, including imports
+  , moduleTypeConstructors :: TypeConstructors
+      -- ^ every type constructor in scope: primitives, imported and declared
   , moduleValues   :: Map.Map Identifier (Type 0, Value)
       -- ^ the values that can be imported from the module: those at its top
       -- level (including imports), except `it` (its result) and internal names
+  , moduleTypes    :: TypeConstructors
+      -- ^ the type constructors that can be imported from the module: those
+      -- it declares or imports (but not the primitives)
   , moduleDependencies :: [(Identifier, LoadedModule)]
       -- ^ every module imported, directly or indirectly, and its import name
   }
@@ -180,19 +199,20 @@ loadModule importers path = do
       contents <- liftIO (tryReadFile path) >>= orFail LoadImportError show
       (parsed, opts) <- orFail LoadParseError id (parseProgram path contents)
 
-      -- Collect the type constructors declared by the module's classes
-      -- TODO: bring them into scope for checking (and export them)
-      openTypeConstructors <- orFail LoadNotWellTyped errorToString $
-        buildTypes primitiveTypeConstructors parsed
-
       -- Imports: later imports shadow earlier ones
       imports <- mapM (loadImport chain path) [ spec | ImportDef spec <- parsed ]
-      let importedValues = Map.unions (reverse [ vals | (_, _, vals) <- imports ])
+      let importedValues = Map.unions (reverse [ vals | (_, _, vals, _) <- imports ])
+          importedTypes  = Map.unions (reverse [ tcs | (_, _, _, tcs) <- imports ])
+
+      -- Type constructors in scope: the primitives, those imported, and
+      -- those declared by the module's classes
+      typeConstructors <- orFail LoadNotWellTyped errorToString $
+        buildTypes (Map.union importedTypes primitiveTypeConstructors) parsed
 
       -- Desugar, check and evaluate, with the imported values in scope
       ast <- orFail LoadNotWellFormed errorToString (desugar parsed)
       (ctxt, ty) <- orFail LoadNotWellTyped errorToString $
-        let ?typeConstructors = Map.union primitiveTypeConstructors openTypeConstructors
+        let ?typeConstructors = typeConstructors
         in typeCheckProgram [ (x, t) | (x, (t, _)) <- Map.toList importedValues ] ast
       let env0 = Map.foldrWithKey (\x (_, v) -> bindHere x v) emptyEnv importedValues
           (env, value) = interpretWith env0 opts ast
@@ -205,22 +225,25 @@ loadModule importers path = do
                 , moduleValue    = value
                 , moduleContext  = ctxt
                 , moduleEnv      = env
+                , moduleTypeConstructors = typeConstructors
                 , moduleValues   = Map.fromList
                     [ (x, (t, v))
                     | (x, t) <- Map.toList (Map.fromListWith (\_new old -> old) ctxt)
                     , x /= "it", not ("%" `isPrefixOf` x)
                     , Right v <- [lookupBinding x env] ]
+                , moduleTypes    = Map.filterWithKey
+                    (\c k -> Map.lookup c primitiveTypeConstructors /= Just k) typeConstructors
                 , moduleDependencies = nubBy ((==) `on` (modulePath . snd))
-                    (concat [ (name, dep) : moduleDependencies dep | (name, dep, _) <- imports ])
+                    (concat [ (name, dep) : moduleDependencies dep | (name, dep, _, _) <- imports ])
                 }
       modify (Map.insert key m)
       return m
 
 -- | Resolve and load an import made by the module at the end of the chain
 -- (at the given path), and select the names it imports: returns the imported
--- module's name, the module, and the values imported from it
+-- module's name, the module, and the values and type constructors imported
 loadImport :: ImportChain -> FilePath -> ImportSpec
-           -> Loader (Identifier, LoadedModule, Map.Map Identifier (Type 0, Value))
+           -> Loader (Identifier, LoadedModule, Map.Map Identifier (Type 0, Value), TypeConstructors)
 loadImport chain importer spec = do
   let name = case spec of
                ImportModule n -> n
@@ -244,11 +267,13 @@ loadImport chain importer spec = do
         <> name <> ".x`) are not available; use `from " <> name <> " import *` or `from "
         <> name <> " import x, y`"
     _ -> loadModule chain path
-  let select keep = return (name, m, Map.filterWithKey (\x _ -> keep x) (moduleValues m))
+  let select keep = return ( name, m
+                           , Map.filterWithKey (\x _ -> keep x) (moduleValues m)
+                           , Map.filterWithKey (\x _ -> keep x) (moduleTypes m) )
   case spec of
     ImportOnly _ xs -> do
       forM_ xs $ \x ->
-        unless (Map.member x (moduleValues m)) $
+        unless (Map.member x (moduleValues m) || Map.member x (moduleTypes m)) $
           importError $ "cannot import `" <> x <> "` from `" <> name <> "`: no such name"
       select (`elem` xs)
     -- `from m import *` brings in only public names, as in Python

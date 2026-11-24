@@ -30,7 +30,6 @@ data REPLState =
     , env         :: Env
     , options     :: [Option]
     , typingContext :: Context
-      -- TODO: populate from the loaded file's declarations
     , typeConstructors :: TypeConstructors
   }
 
@@ -79,7 +78,8 @@ replLoop state = do
                     replLoop $ state { currentFile = Just fileState
                                       , env = moduleEnv m
                                       , options = moduleOptions m
-                                      , typingContext = moduleContext m }
+                                      , typingContext = moduleContext m
+                                      , typeConstructors = moduleTypeConstructors m }
 
           't':' ':rest' -> do
             liftIO $ case parseExpr rest' of
@@ -140,7 +140,8 @@ loadFile state path0 = do
                      , prompt = takeBaseName path
                      , env = moduleEnv m
                      , options = moduleOptions m
-                     , typingContext = moduleContext m }
+                     , typingContext = moduleContext m
+                     , typeConstructors = moduleTypeConstructors m }
 
 -- | Start the REPL, optionally loading a file first.
 repl :: Maybe FilePath -> IO ()

@@ -1,4 +1,9 @@
 # Helper module imported by the import tests (not a test itself)
+class _(UnitBase):
+    furlong   : UnitBase
+    fortnight : UnitBase
+    _rod      : UnitBase
+
 speed_of_light : Float[Unit[m/s]] = 299792458.0
 
 _hidden : Float[Unit[1]] = 7.0
