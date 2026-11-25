@@ -19,7 +19,7 @@ jobs:
           - platform: linux-x86_64
             os: ubuntu-22.04
           - platform: macos-x86_64
-            os: macos-13
+            os: macos-26-intel
           - platform: macos-aarch64
             os: macos-latest
           - platform: windows-x86_64
