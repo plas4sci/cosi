@@ -23,6 +23,12 @@ How does this work out technically?
 
 </td></tr></table>
 
+## Installing
+
+Download an archive for your platform from the [releases page](https://github.com/plas4sci/cosi/releases), unpack it, and put the `cosi` executable somewhere on your `PATH`. No Haskell toolchain required.
+
+Alternatively, you can install from source (see [Building](#Building) below).
+
 ## Example and usage
 
 From [examples/quantity.cosi](examples/quantity.cosi):
@@ -71,15 +77,9 @@ units> :k Float
 {d : Descriptor} -> d -> Type
 ```
 
-## Building and Installing
+## Building
 
 cosi is written in Haskell and is built with [Stack](https://docs.haskellstack.org/).
-
-**Install (prebuilt binaries) - recommended**:
-
-Download an archive for your platform from the [releases page](https://github.com/plas4sci/cosi/releases), unpack it, and put the `cosi` executable somewhere on your `PATH`. No Haskell toolchain required.
-
-**Install (from source)**:
 
 1. Install [Stack](https://docs.haskellstack.org/en/stable/install_and_upgrade/)
 2. Clone this repo (`git clone https://github.com/plas4sci/cosi`)
@@ -88,22 +88,14 @@ Download an archive for your platform from the [releases page](https://github.co
 ```bash
 stack install
 ```
-(The first time it will install the GHC Haskell compiler).
+(The first time it will install the GHC Haskell compiler); you can also run `stack build` to just build without installing globally.
 
 After installing, `cosi` will be available as a command directly.
-
-**For developers**:
-
-Building:
-```bash
-stack build
-```
 
 Running the tests:
 ```bash
 stack test
 ```
-
 
 ## More examples
 
