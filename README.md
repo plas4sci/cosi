@@ -75,7 +75,7 @@ units> :k Float
 
 cosi is written in Haskell and is built with [Stack](https://docs.haskellstack.org/).
 
-**Install (prebuilt binaries)**:
+**Install (prebuilt binaries) - recommended**:
 
 Download an archive for your platform from the [releases page](https://github.com/plas4sci/cosi/releases), unpack it, and put the `cosi` executable somewhere on your `PATH`. No Haskell toolchain required.
 
